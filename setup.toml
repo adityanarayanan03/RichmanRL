@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = {}  # Scanning implicit namespaces is active by default
+
+[project]
+name = "RichmanRL"
+version = "0.0.1"
+authors = [
+  { name="Aditya Narayanan", email="adityan@utexas.edu" },
+  { name="Anant Bhatia", email="anant_bhatia@utexas.edu"}
+]
+description = "Environments and solutions for Richman games using RL"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Linux",
+]
+dependencies = [
+]
+
+[project.optional-dependencies]
+dev = ["black", "ruff", "mypy"]
+test = ["pytest", "pytest-cov", "pytest-mock", "pdbpp"]
+
+[project.urls]
+"Homepage" = "https://github.com/adityanarayanan03/RichmanRL"
+"Bug Tracker" = "https://github.com/adityanarayanan03/RichmanRL/issues"
+
+[tool.black]
+line-length = 80
+
+[tool.ruff]
+lint.select = [
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "UP",  # pyupgrade
+  "D",   # pydocstyle
+]
+
+lint.ignore = ["ANN101", "ANN102"]
+
+extend-exclude = [".venv", "venv", "vscode"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
