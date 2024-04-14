@@ -21,6 +21,8 @@ classifiers = [
     "Operating System :: Linux",
 ]
 dependencies = [
+    "gymnasium",
+    "pettingzoo[classic]",
 ]
 
 [project.optional-dependencies]
