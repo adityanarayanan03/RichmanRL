@@ -4,6 +4,7 @@ from typing import Union, Literal, Tuple, Any
 from gymnasium import spaces
 from .typing_utils import RichmanAction
 import logging
+import numpy as np
 
 
 class RichmanEnv:
@@ -96,6 +97,9 @@ class RichmanEnv:
     def step(self, action: RichmanAction) -> None:
         """Implements bidding selection and then defaults to environment step.
 
+        When learning a sub-game policy or value function, pass bids equal to 
+        each other. This will result in random player selection with equal probability.
+
         Args:
             action: RichmanAction - Actions from BOTH agents, as a tuple of
             bidding and game action.
@@ -134,8 +138,28 @@ class RichmanEnv:
             return
 
         else:
-            self.logger.error(f"Bid sizes cannot be equal. action was {action}")
-            raise ValueError(f"Bid sizes cannot be equal. action was {action}")
+            self.logger.error(f'''Bid sizes are equal, with action was {action}. 
+                              Make sure this was intentional, such as when learning a 
+                              sub-game policy or value function. 
+                              This will result in random player selection.''')
+        
+            if np.random.random() > 0.5:
+                 # Player 1 wins the bid, and transfer stacks to player2
+                self.stacks["player_2"] += bet_1
+                self.stacks["player_1"] -= bet_1
+
+                self.env.agent_selection = "player_1"
+                self.env.step(action["player_1"][1])
+                return
+            
+            else:
+                # Player 2 wins the bid, and transfers stacks to player1
+                self.stacks["player_1"] += bet_2
+                self.stacks["player_2"] -= bet_2
+
+                self.env.agent_selection = "player_2"
+                self.env.step(action["player_2"][1])
+                return
 
     def reset(self, *args, **kwargs) -> None:
         """Resets the environment.
