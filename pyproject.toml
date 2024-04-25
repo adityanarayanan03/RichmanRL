@@ -23,6 +23,7 @@ classifiers = [
 dependencies = [
     "gymnasium",
     "pettingzoo[classic]",
+    "tqdm",
 ]
 
 [project.optional-dependencies]

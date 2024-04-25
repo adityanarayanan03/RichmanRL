@@ -2,7 +2,7 @@
 from pettingzoo import AECEnv
 from typing import Union, Literal, Tuple, Any
 from gymnasium import spaces
-from .typing_utils import RichmanAction
+from .typing_utils import RichmanAction, RichmanObservation
 import logging
 import numpy as np
 
@@ -33,7 +33,7 @@ class RichmanEnv:
 
     def observe(
         self, agent: Union[Literal["player_1", "player_2"]]
-    ) -> Tuple[int, int, Any]:
+    ) -> RichmanObservation:
         """Returns an observation.
 
         Args:
@@ -42,19 +42,26 @@ class RichmanEnv:
         Returns:
             Tuple[int, int, Any] - representing: own_stack, opp_stack, game_obs
         """
+        sub_observation = self.env.observe(agent)
         if agent == "player_1":
-            return (
-                self.stacks["player_1"],
-                self.stacks["player_2"],
-                self.env.observe("player_1"),
+            output = RichmanObservation(
+                observation = (self.stacks["player_1"], 
+                               self.stacks["player_2"], 
+                               sub_observation["observation"]), 
+                action_mask= (self.stacks["player_1"], 
+                              sub_observation["action_mask"])
             )
+            return output
 
         elif agent == "player_2":
-            return (
-                self.stacks["player_2"],
-                self.stacks["player_1"],
-                self.env.observe("player_2"),
+            output = RichmanObservation(
+                observation = (self.stacks["player_2"], 
+                               self.stacks["player_1"], 
+                               sub_observation["observation"]), 
+                action_mask= (self.stacks["player_2"], 
+                              sub_observation["action_mask"])
             )
+            return output
 
         else:
             raise ValueError(f"Agent: {agent} not in set of players.")
@@ -73,8 +80,8 @@ class RichmanEnv:
         """
         return spaces.Tuple(
             (
-                spaces.Box(low=0, high=2 * self.start_capital),
-                spaces.Box(low=0, high=2 * self.start_capital),
+                spaces.Discrete(self.start_capital * 2 + 1),
+                spaces.Discrete(self.start_capital * 2 + 1),
                 self.env.observation_space(agent),
             )
         )
@@ -89,7 +96,7 @@ class RichmanEnv:
         """
         return spaces.Tuple(
             (
-                spaces.Box(low=0, high=2 * self.stacks[agent]),
+                spaces.Discrete(self.start_capital * 2 + 1),
                 self.env.action_space(agent),
             )
         )
