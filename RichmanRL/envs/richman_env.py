@@ -1,7 +1,7 @@
 """A generic wrapper that turns any pettingzoo environment into a Richman game."""
 
 from pettingzoo import AECEnv
-from typing import Union, Literal, Tuple, Any
+from typing import Union, Literal, Tuple
 from gymnasium import spaces
 from .typing_utils import RichmanAction, RichmanObservation
 import logging
