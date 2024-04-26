@@ -6,9 +6,7 @@ Includes Policy base class.
 from RichmanRL.utils import ValueFunction
 from RichmanRL.envs.typing_utils import RichmanObservation
 from abc import ABC, abstractmethod
-from typing import Union
 import numpy as np
-import torch
 
 
 class Policy(ABC):

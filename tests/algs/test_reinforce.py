@@ -38,7 +38,7 @@ def test_trajectory_generation():
             print(f"{step}\n")
 
 def test_reinforce():
-    """Makes sure trajectories can be sampled properly."""
+    """Makes sure reinforce runs without errors."""
     r = RichmanEnv(
         env=tictactoe_v3.raw_env(render_mode=None), capital=100, verbose=True
     )
