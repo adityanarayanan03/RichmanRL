@@ -43,6 +43,8 @@ class RichmanEnv:
         Returns:
             Tuple[int, int, Any] - representing: own_stack, opp_stack, game_obs
         """
+        #Switch control to the calling agent first
+        self.env.agent_selection = agent
         sub_observation = self.env.observe(agent)
         if agent == "player_1":
             output = RichmanObservation(
