@@ -4,6 +4,7 @@ Includes Policy base class.
 """
 
 from RichmanRL.utils import ValueFunction
+from RichmanRL.envs.typing_utils import RichmanObservation
 from abc import ABC, abstractmethod
 from typing import Union
 import numpy as np
@@ -29,21 +30,49 @@ class Policy(ABC):
     @abstractmethod
     def __call__(
         self,
-        features: Union[np.ndarray, torch.Tensor],
-        legal_mask: Union[np.ndarray, torch.Tensor],
+        state: RichmanObservation,
     ) -> int:
         """All policies must be callable, returning an action."""
         # Generics would be a better way to type hint this.
 
+    @abstractmethod
+    def update(self,  *args, **kwargs):
+        """All policies must have an update method.
+        
+        This can be updating the weights of a neural network in polciy
+        gradient, or as simple as making a policy greedy with respect
+        to an updated value function. If a value function is required
+        for the policy, it should be updated here as well.
+        """
+        pass
 
-class RandomPolicy(Policy):
+
+class RandomBiddingPolicy(Policy):
     """Fully random policy."""
 
     def __call__(
         self,
-        features: Union[np.ndarray, torch.Tensor],
-        legal_mask: Union[np.ndarray, torch.Tensor],
+        state: RichmanObservation,
     ) -> int:
         """For a random policy, just returns a purely random (legal) action."""
+        highest_bid = state['action_mask'][0]
+        legal_bids = [1 if i <= highest_bid else 0 for i in range(self.num_actions)]
+        legal_probs = self.probs * legal_bids
+        return np.argmax(legal_probs)
+
+    def update(self, *args, **kwargs):
+        """For a random policy, update does nothing."""
+        pass
+
+class RandomGamePolicy(Policy):
+    """Fully random policy for a game."""
+
+    def __call__(self, state: RichmanObservation) -> int:
+        """For a random policy, just return a purely random (legal) action."""
+        legal_mask = state['action_mask'][1]
         legal_probs = self.probs * legal_mask
         return np.argmax(legal_probs)
+    
+    def update(self, *args, **kwargs):
+        """Does nothing."""
+        pass

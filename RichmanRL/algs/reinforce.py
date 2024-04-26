@@ -5,6 +5,8 @@ from RichmanRL.envs.typing_utils import RichmanAction
 from RichmanRL.utils import Policy, ValueFunction
 from itertools import count
 from .typing_utils import AgentTrajectory
+from typing import Union, Literal
+from tqdm import tqdm
 
 
 class REINFORCE:
@@ -42,7 +44,7 @@ class REINFORCE:
         self.num_episodes = num_episodes
         self.V = V
 
-    def _sample_actions(self, S_1, S_2, agent_1_mask, agent_2_mask) -> RichmanAction:
+    def _sample_actions(self, S_1, S_2) -> RichmanAction:
         """Uses the instantiated policies to sample actions for both agents.
 
         Args:
@@ -54,19 +56,11 @@ class REINFORCE:
         Returns:
             RichmanAction describing both agents' actions.
         """
-        highest_bid_1 = agent_1_mask[0]
-        legal_bids_1 = [1 if i <= highest_bid_1 else 0 for i in range(201)]
-        legal_moves_1 = agent_1_mask[1]
+        player_1_bid = self.agent_1_bid_pi(S_1)
+        player_1_move = self.agent_1_game_pi(S_1)
 
-        highest_bid_2 = agent_2_mask[0]
-        legal_bids_2 = [1 if i <= highest_bid_2 else 0 for i in range(201)]
-        legal_moves_2 = agent_2_mask[1]
-
-        player_1_bid = self.agent_1_bid_pi(S_1, legal_bids_1)
-        player_1_move = self.agent_1_game_pi(S_1, legal_moves_1)
-
-        player_2_bid = self.agent_2_bid_pi(S_2, legal_bids_2)
-        player_2_move = self.agent_2_game_pi(S_2, legal_moves_2)
+        player_2_bid = self.agent_2_bid_pi(S_2)
+        player_2_move = self.agent_2_game_pi(S_2)
 
         return RichmanAction(
             player_1=(player_1_bid, player_1_move),
@@ -83,12 +77,7 @@ class REINFORCE:
         S_2, R_2, done2, _, _ = self.env.last("player_2")
 
         for t in count():
-            A: RichmanAction = self._sample_actions(
-                S_1["observation"],
-                S_2["observation"],
-                S_1["action_mask"],
-                S_2["action_mask"],
-            )
+            A: RichmanAction = self._sample_actions(S_1, S_2)
 
             traj["player_1"].append((R_1, S_1, A["player_1"]))
             traj["player_2"].append((R_2, S_2, A["player_2"]))
@@ -104,3 +93,36 @@ class REINFORCE:
                 break
 
         return traj
+
+    def _update_from_traj(
+        self, traj: AgentTrajectory, agent: Union[Literal["player_1", "player_2"]]
+    ):
+        """Update policies and value functions for a single player."""
+        player_traj = traj[agent]
+
+        for t in range(0, len(player_traj)):
+            gamma_t = self.gamma**t
+
+            # Compute the monte carlo return
+            G = 0
+            for k in range(t + 1, len(player_traj)):
+                G += self.gamma ** (k - t - 1) * player_traj[k][0]
+
+            delta = G - self.V(player_traj[t][1])
+
+            self.V.update(player_traj[t][1], G)
+            self.agent_1_bid_pi.update(
+                player_traj[t][1], player_traj[t][2], gamma_t, delta
+            )
+            self.agent_1_game_pi.update(
+                player_traj[t][1], player_traj[t][2], gamma_t, delta
+            )
+
+    def __call__(self):
+        """Runs the actual learning."""
+        for episode_idx in tqdm(range(self.num_episodes)):
+            # sample a trajectory for both agents
+            traj = self._generate_trajectory()
+
+            self._update_from_traj(traj, "player_1")
+            self._update_from_traj(traj, "player_2")
