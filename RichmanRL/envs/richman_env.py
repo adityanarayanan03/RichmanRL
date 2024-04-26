@@ -1,4 +1,5 @@
 """A generic wrapper that turns any pettingzoo environment into a Richman game."""
+
 from pettingzoo import AECEnv
 from typing import Union, Literal, Tuple, Any
 from gymnasium import spaces
@@ -45,21 +46,23 @@ class RichmanEnv:
         sub_observation = self.env.observe(agent)
         if agent == "player_1":
             output = RichmanObservation(
-                observation = (self.stacks["player_1"], 
-                               self.stacks["player_2"], 
-                               sub_observation["observation"]), 
-                action_mask= (self.stacks["player_1"], 
-                              sub_observation["action_mask"])
+                observation=(
+                    self.stacks["player_1"],
+                    self.stacks["player_2"],
+                    sub_observation["observation"],
+                ),
+                action_mask=(self.stacks["player_1"], sub_observation["action_mask"]),
             )
             return output
 
         elif agent == "player_2":
             output = RichmanObservation(
-                observation = (self.stacks["player_2"], 
-                               self.stacks["player_1"], 
-                               sub_observation["observation"]), 
-                action_mask= (self.stacks["player_2"], 
-                              sub_observation["action_mask"])
+                observation=(
+                    self.stacks["player_2"],
+                    self.stacks["player_1"],
+                    sub_observation["observation"],
+                ),
+                action_mask=(self.stacks["player_2"], sub_observation["action_mask"]),
             )
             return output
 
@@ -104,7 +107,7 @@ class RichmanEnv:
     def step(self, action: RichmanAction) -> None:
         """Implements bidding selection and then defaults to environment step.
 
-        When learning a sub-game policy or value function, pass bids equal to 
+        When learning a sub-game policy or value function, pass bids equal to
         each other. This will result in random player selection with equal probability.
 
         Args:
@@ -145,20 +148,20 @@ class RichmanEnv:
             return
 
         else:
-            self.logger.error(f'''Bid sizes are equal, with action was {action}. 
+            self.logger.error(f"""Bid sizes are equal, with action was {action}. 
                               Make sure this was intentional, such as when learning a 
                               sub-game policy or value function. 
-                              This will result in random player selection.''')
-        
+                              This will result in random player selection.""")
+
             if np.random.random() > 0.5:
-                 # Player 1 wins the bid, and transfer stacks to player2
+                # Player 1 wins the bid, and transfer stacks to player2
                 self.stacks["player_2"] += bet_1
                 self.stacks["player_1"] -= bet_1
 
                 self.env.agent_selection = "player_1"
                 self.env.step(action["player_1"][1])
                 return
-            
+
             else:
                 # Player 2 wins the bid, and transfers stacks to player1
                 self.stacks["player_1"] += bet_2
@@ -167,6 +170,18 @@ class RichmanEnv:
                 self.env.agent_selection = "player_2"
                 self.env.step(action["player_2"][1])
                 return
+
+    def last(
+        self, agent: Union[Literal["player_1", "player_2"]]
+    ) -> Tuple[RichmanObservation, float, bool, bool, str]:
+        """Returns the latest observation and reward for the agent."""
+        observation = self.observe(agent)
+        reward = self.env.rewards[agent]
+        termination = self.env.terminations[agent]
+        truncation = self.env.truncations[agent]
+        info = self.env.infos[agent]
+
+        return observation, reward, termination, truncation, info
 
     def reset(self, *args, **kwargs) -> None:
         """Resets the environment.
@@ -180,7 +195,7 @@ class RichmanEnv:
         }
 
         self.env.reset(*args, **kwargs)
-    
+
     def close(self, *args, **kwargs) -> None:
         """Mostly just a wrapper around game env close."""
         self.env.close(*args, **kwargs)

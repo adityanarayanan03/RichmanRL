@@ -24,6 +24,7 @@ dependencies = [
     "gymnasium",
     "pettingzoo[classic]",
     "tqdm",
+    "torch"
 ]
 
 [project.optional-dependencies]
