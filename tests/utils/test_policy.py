@@ -1,6 +1,6 @@
 """Tests for policies."""
 
-from RichmanRL.utils import RandomPolicy
+from RichmanRL.utils import RandomGamePolicy, RandomBiddingPolicy
 from RichmanRL.envs import RichmanEnv
 from pettingzoo.classic import tictactoe_v3
 
@@ -14,7 +14,7 @@ def test_random_policy():
     r.reset()
     print("\n")
 
-    random_policy = RandomPolicy(None, 9, 0)
+    random_policy = RandomGamePolicy(None, 9, 0)
 
     while True:
         observation1, reward1, done1, _, _ = r.last("player_1")
@@ -29,8 +29,8 @@ def test_random_policy():
         print(f"Player 1 legal mask is {legal_mask_1}")
         print(f"Player 2 legal mask is {legal_mask_2}")
 
-        player_1_action = random_policy(None, legal_mask_1)
-        player_2_action = random_policy(None, legal_mask_2)
+        player_1_action = random_policy(observation1)
+        player_2_action = random_policy(observation2)
 
         print(f"Player 1 taking action {player_1_action}")
         print(f"Player 2 taking action {player_2_action}")
@@ -47,8 +47,8 @@ def test_random_policy_bidding():
     r.reset()
     print("\n")
 
-    random_policy = RandomPolicy(None, 9, 0)
-    random_bidding_policy = RandomPolicy(None, 201, 0)
+    random_policy = RandomGamePolicy(None, 9, 0)
+    random_bidding_policy = RandomBiddingPolicy(None, 201, 0)
 
     while True:
         observation1, reward1, done1, _, _ = r.last("player_1")

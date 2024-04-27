@@ -2,7 +2,13 @@
 
 from RichmanRL.envs import RichmanEnv
 from RichmanRL.algs import REINFORCE
-from RichmanRL.utils import RandomGamePolicy, RandomBiddingPolicy, ConstantBaseline
+from RichmanRL.utils import (
+    RandomGamePolicy,
+    RandomBiddingPolicy,
+    ConstantBaseline,
+    NoBiddingPolicy,
+    InGameNNPolicy,
+)
 from pettingzoo.classic import tictactoe_v3
 
 
@@ -17,13 +23,13 @@ def test_trajectory_generation():
 
     reinforce = REINFORCE(
         r,
-        RandomBiddingPolicy(None, 201, 0),
+        NoBiddingPolicy(None, 201, 0),
         RandomGamePolicy(None, 9, 0),
-        RandomBiddingPolicy(None, 201, 0),
-        RandomGamePolicy(None, 9, 0),
+        NoBiddingPolicy(None, 201, 0),
+        InGameNNPolicy(18, 9, 0.0003),
         0.99,
-        10,
-        None,
+        10_000,
+        ConstantBaseline(),
     )
 
     for _ in range(10):
@@ -37,6 +43,7 @@ def test_trajectory_generation():
         for step in traj["player_2"]:
             print(f"{step}\n")
 
+
 def test_reinforce():
     """Makes sure reinforce runs without errors."""
     r = RichmanEnv(
@@ -48,10 +55,10 @@ def test_reinforce():
 
     reinforce = REINFORCE(
         r,
-        RandomBiddingPolicy(None, 201, 0),
+        NoBiddingPolicy(None, 201, 0),
         RandomGamePolicy(None, 9, 0),
-        RandomBiddingPolicy(None, 201, 0),
-        RandomGamePolicy(None, 9, 0),
+        NoBiddingPolicy(None, 201, 0),
+        InGameNNPolicy(18, 9, 0.0003),
         0.99,
         10_000,
         ConstantBaseline(),

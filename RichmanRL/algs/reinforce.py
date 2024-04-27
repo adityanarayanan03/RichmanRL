@@ -7,6 +7,7 @@ from itertools import count
 from .typing_utils import AgentTrajectory
 from typing import Union, Literal
 from tqdm import tqdm
+import torch
 
 
 class REINFORCE:
@@ -79,8 +80,8 @@ class REINFORCE:
         for t in count():
             A: RichmanAction = self._sample_actions(S_1, S_2)
 
-            traj["player_1"].append((R_1, S_1, A["player_1"]))
-            traj["player_2"].append((R_2, S_2, A["player_2"]))
+            traj["player_1"].append((R_1, S_1, A))
+            traj["player_2"].append((R_2, S_2, A))
 
             self.env.step(A)
 
@@ -94,6 +95,7 @@ class REINFORCE:
 
         return traj
 
+    @torch.no_grad()
     def _update_from_traj(
         self, traj: AgentTrajectory, agent: Union[Literal["player_1", "player_2"]]
     ):
@@ -111,18 +113,47 @@ class REINFORCE:
             delta = G - self.V(player_traj[t][1])
 
             self.V.update(player_traj[t][1], G)
-            self.agent_1_bid_pi.update(
-                player_traj[t][1], player_traj[t][2], gamma_t, delta
-            )
-            self.agent_1_game_pi.update(
-                player_traj[t][1], player_traj[t][2], gamma_t, delta
-            )
+
+            if agent == "player_1":
+                self.agent_1_bid_pi.update(
+                    state=player_traj[t][1],
+                    action=player_traj[t][2],
+                    gamma_t=gamma_t,
+                    delta=delta,
+                    agent=agent,
+                )
+
+                self.agent_1_game_pi.update(
+                    state=player_traj[t][1],
+                    action=player_traj[t][2],
+                    gamma_t=gamma_t,
+                    delta=delta,
+                    agent=agent,
+                )
+            else:
+                self.agent_2_bid_pi.update(
+                    state=player_traj[t][1],
+                    action=player_traj[t][2],
+                    gamma_t=gamma_t,
+                    delta=delta,
+                    agent=agent,
+                )
+
+                self.agent_2_game_pi.update(
+                    state=player_traj[t][1],
+                    action=player_traj[t][2],
+                    gamma_t=gamma_t,
+                    delta=delta,
+                    agent=agent,
+                )
 
     def __call__(self):
         """Runs the actual learning."""
         for episode_idx in tqdm(range(self.num_episodes)):
             # sample a trajectory for both agents
             traj = self._generate_trajectory()
+
+            print(traj["player_2"])
 
             self._update_from_traj(traj, "player_1")
             self._update_from_traj(traj, "player_2")
