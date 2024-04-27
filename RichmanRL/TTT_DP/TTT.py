@@ -19,6 +19,7 @@ class TTT(Env): # MDP introduced at Fig 5.4 in Sutton Book
         env_spec=EnvSpec(3**9,18,1.)
         super().__init__(env_spec)
         self.reset()
+        self.seen = set()
 
     def checkWin(self, state, player):
         board = np.reshape(state, (3,3))
@@ -44,7 +45,9 @@ class TTT(Env): # MDP introduced at Fig 5.4 in Sutton Book
             action = np.random.choice(np.where(self._state == 0)[0])
             new_state, reward, terminal = self.step(self._state, action)
             traj.append((self.stateToNum(self._state), action, reward, self.stateToNum(new_state)))
+            self.seen.add(self.stateToNum(self._state))
             self._state = new_state
+        self.seen.add(self.stateToNum(self._state))
         return traj
     
     def step(self, state, action):
@@ -57,7 +60,7 @@ class TTT(Env): # MDP introduced at Fig 5.4 in Sutton Book
 
 class BoardVisualizer():
 
-    def __init__(self, value_function):
+    def __init__(self, value_function, seen):
         # Constants
         self.WIDTH, self.HEIGHT = 300, 300
         self.LINE_WIDTH = 5
@@ -74,13 +77,14 @@ class BoardVisualizer():
         # Board state
         self.board = np.zeros(9)
         self.values = value_function
+        self.seen = seen
 
     def draw_board(self):
         self.screen.fill(self.WHITE)
         for i in range(1, self.BOARD_SIZE):
             pygame.draw.line(self.screen, self.BLACK, (0, i * self.SQUARE_SIZE), (self.WIDTH, i * self.SQUARE_SIZE), self.LINE_WIDTH)
             pygame.draw.line(self.screen, self.BLACK, (i * self.SQUARE_SIZE, 0), (i * self.SQUARE_SIZE, self.HEIGHT), self.LINE_WIDTH)
-        print(f"Current Board State Value: {self.values[self.get_base_3_num()]}")
+        print(f"Current Board State Value: {self.values[self.get_base_3_num()]}, Seen: {self.get_base_3_num() in self.seen}")
         for row in range(3):
             for col in range(3):
                 self.draw_mark(row, col)
@@ -120,8 +124,10 @@ if __name__ == "__main__":
     env = TTT()
     trajs = [env.generate_traj() for i in range(1_000_000)]
     initV = np.zeros(3**9)
-    V = on_policy_n_step_td(env.spec, trajs, 4, 0.3, initV)
-    b = BoardVisualizer(V)
+    V = on_policy_n_step_td(env.spec, trajs, 2, 0.3, initV)
+    print(trajs[20])
+    print(trajs[20000])
+    b = BoardVisualizer(V, env.seen)
     b.draw()
 
 
