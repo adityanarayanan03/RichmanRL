@@ -47,7 +47,7 @@ class Board():
     
     def play_action(self, row, column, player):
         if(player not in [self.PLAYER1, self.PLAYER2]):
-            raise Exception("Invalid player passed in")
+            raise Exception(f"Invalid player passed in: {player}")
         if(self.board[row][column] != 0):
             raise Exception(f"{row}, {column} is already taken by player {self.board[row][column]}")
         if(row < 0 or row >= self.size or column < 0 or column >= self.size):
@@ -171,7 +171,7 @@ class Hex(AECEnv):
             return self._was_dead_step(action)
         # play turn
         row, column = action//self.board_size, action%self.board_size
-        self.board.play_action(row, column, self.agents.index(self.agent_selection))
+        self.board.play_action(row, column, self.agents.index(self.agent_selection)+1)
 
         # update infos
         # list of valid actions (indexes in board)
@@ -202,7 +202,7 @@ class Hex(AECEnv):
 
     def reset(self, seed=None, options=None):
         # reset environment
-        self.board = Board()
+        self.board = Board(self.board_size)
 
         self.agents = self.possible_agents[:]
         self.rewards = {i: 0 for i in self.agents}
@@ -220,11 +220,11 @@ class Hex(AECEnv):
 
         if self.render_mode == "human":
             self.screen = pygame.display.set_mode(
-                (self.screen_height, self.screen_height)
+                (self.screen_height*1.5, self.screen_height)
             )
-            pygame.display.set_caption("Tic-Tac-Toe")
+            pygame.display.set_caption("Hex")
         else:
-            self.screen = pygame.Surface((self.screen_height, self.screen_height))
+            self.screen = pygame.Surface((self.screen_height*1.5, self.screen_height))
 
     def close(self):
         pass
@@ -237,7 +237,6 @@ class Hex(AECEnv):
             return
 
         screen_height = self.screen_height
-        screen_width = self.screen_height*1.5
         hex_radius = screen_height / self.board_size / 2 
         WHITE = (255, 255, 255)
         RED = (255, 0, 0)
@@ -248,7 +247,7 @@ class Hex(AECEnv):
             for col in range(self.board_size):
                 x = 2*hex_radius * col + hex_radius*row + hex_radius
                 y = hex_radius + row*hex_radius*math.sqrt(3)
-                pygame.draw.circle(self.screen, colors[self.board[x][y]], (x, y), hex_radius)
+                pygame.draw.circle(self.screen, colors[int(self.board.board[row][col])], (x, y), hex_radius)
 
         if self.render_mode == "human":
             pygame.display.update()
