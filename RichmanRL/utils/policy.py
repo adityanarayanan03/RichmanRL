@@ -131,25 +131,31 @@ class InGameNNPolicy(Policy):
         agent: Union[Literal["player_1", "player_2"]],
     ):
         """One update step of policy gradient algorithm."""
+        if not action:
+            #The last step in trajectory has no valid action.
+            return
+        
+        #print("\n")
         self.mlp.train()
         self.optimizer.zero_grad()
 
         state_feature = state["observation"][2].flatten()
         legal_mask = state["action_mask"][1]
 
-        print(f"Action is {action}")
-
         action_taken = action[agent][1]
 
         probs = self.mlp(state_feature, legal_mask, return_prob=True)
+
+        #print(f"probs is {probs} and action taken is {action_taken}")
+
         loss = -1 * torch.log(probs[action_taken]) * self.alpha * gamma_t * delta
+
+        #print(f"Loss is {loss}")
 
         loss.backward()
         self.optimizer.step()
 
-    def __call__(
-        self, state: RichmanObservation
-    ) -> int:
+    def __call__(self, state: RichmanObservation) -> int:
         """Callable that returns action for the agent."""
         state_feature = state["observation"][2].flatten()
         legal_mask = state["action_mask"][1]
@@ -158,7 +164,8 @@ class InGameNNPolicy(Policy):
 
         _, action = torch.max(action_probs, dim=0)
 
-
-        print(f"Action is {action}, legal mask is {legal_mask}, action_probs are {action_probs}")
+        #print(f"Legal_mask is {legal_mask}")
+        #print(f"Action_probs is {action_probs}")
+        #print(f"Action is {action}")
 
         return action

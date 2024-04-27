@@ -89,8 +89,8 @@ class REINFORCE:
             S_2, R_2, done2, _, _ = self.env.last("player_2")
 
             if done1 or done2:
-                traj["player_1"].append((R_1, S_1, A["player_1"]))
-                traj["player_2"].append((R_2, S_2, A["player_2"]))
+                traj["player_1"].append((R_1, S_1, None))
+                traj["player_2"].append((R_2, S_2, None))
                 break
 
         return traj
@@ -153,7 +153,13 @@ class REINFORCE:
             # sample a trajectory for both agents
             traj = self._generate_trajectory()
 
-            print(traj["player_2"])
-
+            """             #We need to inspect the trajectory for any illegal actions
+            for player in ["player_1", "player_2"]:
+                for idx, (reward, state, action) in enumerate(traj[player]):
+                    print(f"Idx in trajectory is {idx}. Reward is {reward}")
+                    if state["action_mask"][1][action[player][1]] == 0:
+                        print(f"FOUND AN ILLEGAL ACTION IN THE TRAJECTORY")
+                        print(f"Player is {player}\n\n") 
+            """
             self._update_from_traj(traj, "player_1")
             self._update_from_traj(traj, "player_2")

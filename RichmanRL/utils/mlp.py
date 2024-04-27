@@ -41,6 +41,8 @@ class MLP(nn.Module):
             return_prob: bool - For policy approximation.
         """
         x = torch.from_numpy(x).float()
+
+        legal_mask = np.array([float("-Inf") if x == 0 else 0 for x in legal_mask])
         legal_mask = torch.from_numpy(legal_mask).float()
 
         out = self.fc1(x)
@@ -49,15 +51,19 @@ class MLP(nn.Module):
         out = self.relu2(out)
         out = self.fc3(out)
 
-        print(f"legal mask as a tensor is {legal_mask}")
-        out = out * legal_mask
-        print(f"After pairwise product, output is {out}")
+        #print("\n\n\n")
+        #print(f"Before applying mask, out is {out}")
+        #print(f"Before applying mask, mask is {legal_mask}")
+
+        out = out + legal_mask
 
         if self.output_dims > 1:
             out = self.softmax(out)
-        print(f"After softmax, output is {out}")
+
+        #print(f"After applying and softmax, out is {out}")
 
         if not return_prob:
             return torch.multinomial(out, 1).item()
 
         return out
+    
