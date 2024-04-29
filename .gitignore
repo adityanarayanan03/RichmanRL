@@ -4,3 +4,5 @@ __pycache__
 **/__pycache__
 **/*.egg-info
 *.egg-info
+
+saved_models/tests/

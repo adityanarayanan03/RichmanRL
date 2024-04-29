@@ -11,6 +11,8 @@ from .mlp import MLP
 import torch.optim as optim
 from typing import Union, Literal
 import torch
+import pickle
+import os
 
 
 class Policy(ABC):
@@ -132,10 +134,10 @@ class InGameNNPolicy(Policy):
     ):
         """One update step of policy gradient algorithm."""
         if not action:
-            #The last step in trajectory has no valid action.
+            # The last step in trajectory has no valid action.
             return
-        
-        #print("\n")
+
+        # print("\n")
         self.mlp.train()
         self.optimizer.zero_grad()
 
@@ -146,11 +148,11 @@ class InGameNNPolicy(Policy):
 
         probs = self.mlp(state_feature, legal_mask, return_prob=True)
 
-        #print(f"probs is {probs} and action taken is {action_taken}")
+        # print(f"probs is {probs} and action taken is {action_taken}")
 
         loss = -1 * torch.log(probs[action_taken]) * self.alpha * gamma_t * delta
 
-        #print(f"Loss is {loss}")
+        # print(f"Loss is {loss}")
 
         loss.backward()
         self.optimizer.step()
@@ -164,8 +166,29 @@ class InGameNNPolicy(Policy):
 
         _, action = torch.max(action_probs, dim=0)
 
-        #print(f"Legal_mask is {legal_mask}")
-        #print(f"Action_probs is {action_probs}")
-        #print(f"Action is {action}")
+        # print(f"Legal_mask is {legal_mask}")
+        # print(f"Action_probs is {action_probs}")
+        # print(f"Action is {action}")
 
         return action
+
+
+def pickle_policy(
+    policy: Policy,
+    file_name: str,
+    base_dir: str,
+    subfolder: str = "saved_models/policies/",
+):
+    """Pickle to save a policy.
+    
+    Args:
+        policy: Policy - Policy to save
+        file_name: str - Name to give the pickle file
+        base_dir: str - Location of RichmanRL base on this computer
+        subfolder: str - default saved_models/policies/
+    """
+    dir = os.path.join(base_dir, subfolder)
+    if not os.path.exists(dir):
+        os.mkdir(dir)
+
+    pickle.dump(policy, open(dir + file_name, "wb"))

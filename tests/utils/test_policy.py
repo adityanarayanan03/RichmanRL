@@ -3,6 +3,7 @@
 from RichmanRL.utils import RandomGamePolicy, RandomBiddingPolicy
 from RichmanRL.envs import RichmanEnv
 from pettingzoo.classic import tictactoe_v3
+from RichmanRL.utils import pickle_policy
 
 
 def test_random_policy():
@@ -86,3 +87,8 @@ def test_random_policy_bidding():
                 "player_2": (player_2_bid, player_2_action),
             }
         )
+
+def test_pickle_policy():
+    policy = RandomBiddingPolicy(None, 201, 0)
+    pickle_policy(policy, "RandomBiddingPolicy.pkl", "/home/anant/projects/RichmanRL/", "saved_models/tests/")
+    
