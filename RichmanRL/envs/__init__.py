@@ -7,3 +7,4 @@ pricing.
 """
 
 from .richman_env import RichmanEnv   # noqa: F401
+from .HexEnv import Hex

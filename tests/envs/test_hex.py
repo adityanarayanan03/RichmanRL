@@ -1,7 +1,7 @@
 """Tests RichmanEnv wrapper using tictactoe_v3."""
 
 from RichmanRL.envs import RichmanEnv
-from HexEnv import Hex
+from RichmanRL.envs import Hex
 from tqdm import tqdm
 import time
 
@@ -129,7 +129,7 @@ def test_tiebreak():
     r.render()
 
 #test_instantiation()
-test_observation()
+test_speed()
 # test_action_space()
 # test_action()
 # test_speed()
