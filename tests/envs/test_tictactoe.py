@@ -127,3 +127,30 @@ def test_tiebreak():
     print(r.observe("player_1"))
     print(r.env.terminations)
     r.render()
+
+def test_reward():
+    """Ensures that rewards are given properly."""
+    r = RichmanEnv(
+        env=tictactoe_v3.raw_env(render_mode="human"), capital=100, verbose=True
+    )
+
+    r.reset()
+
+    print("\n")
+    print("Taking first round of actions")
+    r.step({"player_1": (15, 0), "player_2": (10, 0)})
+    print(r.observe("player_1"))
+    print(r.last("player_1"))
+    print(r.last("player_2"))
+
+    print("Taking second round of actions")
+    r.step({"player_1": (15, 1), "player_2": (10, 1)})
+    print(r.observe("player_1"))
+    print(r.last("player_1"))
+    print(r.last("player_2"))
+
+    print("Taking third round of actions")
+    r.step({"player_1": (15, 2), "player_2": (10, 2)})
+    print(r.observe("player_1"))
+    print(r.last("player_1"))
+    print(r.last("player_2"))
