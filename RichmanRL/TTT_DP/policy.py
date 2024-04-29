@@ -1,7 +1,8 @@
 import numpy as np
 
+
 class Policy(object):
-    def action_prob(self,state:int,action:int) -> float:
+    def action_prob(self, state: int, action: int) -> float:
         """
         input:
             state, action
@@ -10,7 +11,7 @@ class Policy(object):
         """
         raise NotImplementedError()
 
-    def action(self,state:int) -> int:
+    def action(self, state: int) -> int:
         """
         input:
             state

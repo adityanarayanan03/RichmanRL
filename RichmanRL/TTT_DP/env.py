@@ -1,29 +1,31 @@
 import numpy as np
 import typing
 
+
 class EnvSpec(object):
-    def __init__(self,nS,nA,gamma):
+    def __init__(self, nS, nA, gamma):
         self._nS = nS
         self._nA = nA
         self._gamma = gamma
 
     @property
     def nS(self) -> int:
-        """ # possible states """
+        """# possible states"""
         return self._nS
 
     @property
     def nA(self) -> int:
-        """ # possible actions """
+        """# possible actions"""
         return self._nA
 
     @property
     def gamma(self) -> float:
-        """ discounting factor of the environment """
+        """discounting factor of the environment"""
         return self._gamma
 
+
 class Env(object):
-    def __init__(self,env_spec):
+    def __init__(self, env_spec):
         self._env_spec: EnvSpec = env_spec
 
     @property
@@ -38,13 +40,14 @@ class Env(object):
         """
         raise NotImplementedError()
 
-    def step(self,action:int) -> (int, int, bool):
+    def step(self, action: int) -> (int, int, bool):
         """
         proceed one step.
         return:
             next state, reward, done (whether it reached to a terminal state)
         """
         raise NotImplementedError()
+
 
 class EnvWithModel(Env):
     @property
@@ -64,4 +67,3 @@ class EnvWithModel(Env):
             R[s,a,s'] := reward the agent will get it experiences (s,a,s') transition.
         """
         raise NotImplementedError()
-

@@ -4,7 +4,7 @@ import numpy as np
 from env import EnvSpec
 from policy import Policy
 import math
-
+from tqdm import tqdm
 
 
 class QPolicy(Policy):
@@ -12,12 +12,12 @@ class QPolicy(Policy):
         #####################
         # TODO: Implement the methods in this class.
         # You may add any arguments to the constructor as you see fit.
-        # "QPolicy" here refers to a policy that takes 
+        # "QPolicy" here refers to a policy that takes
         #    greedy actions w.r.t. Q values
         #####################
         self.actions = np.argmax(Q, axis=1)
-    
-    def action_prob(self,state:int,action:int) -> float:
+
+    def action_prob(self, state: int, action: int) -> float:
         """
         input:
             state, action
@@ -26,7 +26,7 @@ class QPolicy(Policy):
         """
         return 1 if self.actions[state] == action else 0
 
-    def action(self,state:int) -> int:
+    def action(self, state: int) -> int:
         """
         input:
             state
@@ -35,12 +35,13 @@ class QPolicy(Policy):
         """
         return self.actions[state]
 
+
 def on_policy_n_step_td(
-    env_spec:EnvSpec,
-    trajs:Iterable[Iterable[Tuple[int,int,int,int]]],
-    n:int,
-    alpha:float,
-    initV:np.array
+    env_spec: EnvSpec,
+    trajs: Iterable[Iterable[Tuple[int, int, int, int]]],
+    n: int,
+    alpha: float,
+    initV: np.array,
 ) -> Tuple[np.array]:
     """
     input:
@@ -61,26 +62,32 @@ def on_policy_n_step_td(
     gamma = env_spec.gamma
     V = initV
 
-    for traj in trajs:
+    for traj in tqdm(trajs):
         T = len(traj)
         for t in range(T):
             tau = t - n + 1
             if tau >= 0:
-                G = sum([np.power(gamma, i-tau)*traj[i][2] for i in range(tau, min(tau+n, T))])
+                G = sum(
+                    [
+                        np.power(gamma, i - tau) * traj[i][2]
+                        for i in range(tau, min(tau + n, T))
+                    ]
+                )
                 if tau + n < T:
-                    G += np.power(gamma, n) * V[traj[tau+n][0]]
+                    G += np.power(gamma, n) * V[traj[tau + n][0]]
                 V[traj[tau][0]] += alpha * (G - V[traj[tau][0]])
 
     return V
 
+
 def off_policy_n_step_sarsa(
-    env_spec:EnvSpec,
-    trajs:Iterable[Iterable[Tuple[int,int,int,int]]],
-    bpi:Policy,
-    n:int,
-    alpha:float,
-    initQ:np.array
-) -> Tuple[np.array,Policy]:
+    env_spec: EnvSpec,
+    trajs: Iterable[Iterable[Tuple[int, int, int, int]]],
+    bpi: Policy,
+    n: int,
+    alpha: float,
+    initQ: np.array,
+) -> Tuple[np.array, Policy]:
     """
     input:
         env_spec: environment spec
@@ -113,12 +120,28 @@ def off_policy_n_step_sarsa(
             if tau >= 0:
                 rho = 1
                 # for i in range(tau, min(tau+n-1, T-1)):
-                rho = np.prod([(policy.action_prob(traj[i][0], traj[i][1])/bpi.action_prob(traj[i][0], traj[i][1])) for i in range(tau + 1, min(tau+n, T))])
-                G = sum([np.power(gamma, i-tau)*traj[i][2] for i in range(tau, min(tau+n, T))])
+                rho = np.prod(
+                    [
+                        (
+                            policy.action_prob(traj[i][0], traj[i][1])
+                            / bpi.action_prob(traj[i][0], traj[i][1])
+                        )
+                        for i in range(tau + 1, min(tau + n, T))
+                    ]
+                )
+                G = sum(
+                    [
+                        np.power(gamma, i - tau) * traj[i][2]
+                        for i in range(tau, min(tau + n, T))
+                    ]
+                )
                 if tau + n < T:
-                    G += np.power(gamma, n) * Q[traj[int(tau+n)][0], traj[int(tau+n)][1]]
-                Q[traj[int(tau)][0], traj[int(tau)][1]] += alpha * rho * (G - Q[traj[int(tau)][0], traj[int(tau)][1]])
+                    G += (
+                        np.power(gamma, n)
+                        * Q[traj[int(tau + n)][0], traj[int(tau + n)][1]]
+                    )
+                Q[traj[int(tau)][0], traj[int(tau)][1]] += (
+                    alpha * rho * (G - Q[traj[int(tau)][0], traj[int(tau)][1]])
+                )
                 policy = QPolicy(Q)
     return Q, policy
-
-
