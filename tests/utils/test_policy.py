@@ -3,7 +3,15 @@
 from RichmanRL.utils import RandomGamePolicy, RandomBiddingPolicy
 from RichmanRL.envs import RichmanEnv
 from pettingzoo.classic import tictactoe_v3
-from RichmanRL.utils import pickle_policy
+from RichmanRL.utils import (
+    pickle_policy,
+    get_pickled_policy,
+    ConstantBaseline,
+    InGameNNPolicy,
+    NoBiddingPolicy,
+)
+from RichmanRL.algs import REINFORCE
+from tqdm import tqdm
 
 
 def test_random_policy():
@@ -88,7 +96,86 @@ def test_random_policy_bidding():
             }
         )
 
+
 def test_pickle_policy():
-    policy = RandomBiddingPolicy(None, 201, 0)
-    pickle_policy(policy, "RandomBiddingPolicy.pkl", "/home/anant/projects/RichmanRL/", "saved_models/tests/")
-    
+    """Ensures that a policy can be pickled and unpickled and be unaffected.."""
+    # This is basically the test from test_reinforce with pickling in the middle.
+    r = RichmanEnv(
+        env=tictactoe_v3.raw_env(render_mode=None), capital=100, verbose=True
+    )
+
+    r.reset()
+    print("\n")
+
+    reinforce = REINFORCE(
+        r,
+        NoBiddingPolicy(None, 201, 0),
+        RandomGamePolicy(None, 9, 0),
+        NoBiddingPolicy(None, 201, 0),
+        InGameNNPolicy(18, 9, 0.0003),
+        0.99,
+        2000,
+        ConstantBaseline(),
+    )
+
+    reinforce()
+
+    in_game_policy = reinforce.agent_2_game_pi
+    r = RichmanEnv(
+        env=tictactoe_v3.raw_env(render_mode=None), capital=100, verbose=True
+    )
+
+    reinforce = REINFORCE(
+        r,
+        NoBiddingPolicy(None, 201, 0),
+        RandomGamePolicy(None, 9, 0),
+        NoBiddingPolicy(None, 201, 0),
+        in_game_policy,
+        0.99,
+        1000,
+        ConstantBaseline(),
+    )
+
+    total_reward = 0
+    for x in tqdm(range(1000)):
+        traj = reinforce._generate_trajectory()  # noqa: F841
+
+        # find out the winner
+        last_reward = traj["player_2"][-1][0]
+
+        total_reward += last_reward
+    print(total_reward)
+
+    print("Pickling policy...")
+    pickle_policy(
+        in_game_policy,
+        "REINFORCE_policy.pkl",
+        "/Users/aditya/Documents/repos/ut/RichmanRL/",
+    )
+
+    print("Unpickling policy...")
+    loaded_policy = get_pickled_policy(
+        "REINFORCE_policy.pkl", "/Users/aditya/Documents/repos/ut/RichmanRL/"
+    )
+
+    print("Validating total accumulated reward")
+    reinforce = REINFORCE(
+        r,
+        NoBiddingPolicy(None, 201, 0),
+        RandomGamePolicy(None, 9, 0),
+        NoBiddingPolicy(None, 201, 0),
+        loaded_policy,
+        0.99,
+        1000,
+        ConstantBaseline(),
+    )
+
+    total_reward = 0
+    for x in tqdm(range(1000)):
+        traj = reinforce._generate_trajectory()  # noqa: F841
+
+        # find out the winner
+        last_reward = traj["player_2"][-1][0]
+
+        total_reward += last_reward
+    print(total_reward)

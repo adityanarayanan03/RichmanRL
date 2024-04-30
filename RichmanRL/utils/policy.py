@@ -180,7 +180,7 @@ def pickle_policy(
     subfolder: str = "saved_models/policies/",
 ):
     """Pickle to save a policy.
-    
+
     Args:
         policy: Policy - Policy to save
         file_name: str - Name to give the pickle file
@@ -191,4 +191,22 @@ def pickle_policy(
     if not os.path.exists(dir):
         os.mkdir(dir)
 
-    pickle.dump(policy, open(dir + file_name, "wb"))
+    with open(dir + file_name, "wb") as file:
+        pickle.dump(policy, file)
+
+
+def get_pickled_policy(
+    file_name: str, base_dir: str, subfolder: str = "saved_models/policies/"
+) -> Policy:
+    """Returns a pickled policy.
+    
+    Args:
+        file_name: str - Name to give the pickle file
+        base_dir: str - Location of RichmanRL base on this computer
+        subfolder: str - default saved_models/policies/
+    """
+    dir = os.path.join(base_dir, subfolder)
+    with open(dir+file_name, 'rb') as file:
+        policy = pickle.load(file)
+    
+    return policy

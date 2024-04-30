@@ -10,5 +10,6 @@ from .policy import (
     RandomGamePolicy,  # noqa: F401
     NoBiddingPolicy,  # noqa: F401
     InGameNNPolicy,  # noqa: F401
-    pickle_policy,
+    pickle_policy, # noqa: F401
+    get_pickled_policy, # noqa: F401
 )  # noqa: F401

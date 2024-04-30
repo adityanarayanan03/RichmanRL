@@ -150,10 +150,12 @@ class RichmanEnv:
             return
 
         else:
+            '''
             self.logger.error(f"""Bid sizes are equal, with action was {action}. 
                               Make sure this was intentional, such as when learning a 
                               sub-game policy or value function. 
                               This will result in random player selection.""")
+            '''
 
             if np.random.random() > 0.5:
                 # Player 1 wins the bid, and transfer stacks to player2
