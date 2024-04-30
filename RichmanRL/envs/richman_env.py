@@ -9,6 +9,7 @@ from RichmanRL.utils import AgentTrajectory
 import logging
 import numpy as np
 from itertools import count
+from tqdm import tqdm
 
 
 class RichmanEnv:
@@ -290,3 +291,42 @@ class RichmanEnv:
                 break
 
         return traj
+
+    def evaluate_policies(
+        self,
+        agent_1_bid_pi: Policy,
+        agent_1_game_pi: Policy,
+        agent_2_bid_pi: Policy,
+        agent_2_game_pi: Policy,
+        num_samples: int = 10_000,
+    ):
+        """Evaluate how good a policy is.
+
+        Args:
+            agent_1_bid_pi: Policy,
+            agent_1_game_pi: Policy,
+            agent_2_bid_pi: Policy,
+            agent_2_game_pi: Policy,
+            num_samples: int - Number of trial games
+
+        Returns:
+            (float, float, float) - player_1, player_2, tie
+        """
+        wins = 0
+        losses = 0
+        ties = 0
+        for _ in tqdm(range(num_samples)):
+            traj = self.generate_trajectory(
+                agent_1_bid_pi, agent_1_game_pi, agent_2_bid_pi, agent_2_game_pi
+            )
+
+            last_reward = traj["player_1"][-1][0]
+
+            if last_reward == 1:
+                wins += 1
+            elif last_reward == -1:
+                losses += 1
+            else:
+                ties += 1
+
+        return wins / num_samples, losses / num_samples, ties / num_samples

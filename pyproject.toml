@@ -24,7 +24,8 @@ dependencies = [
     "gymnasium",
     "pettingzoo[classic]",
     "tqdm",
-    "torch"
+    "torch",
+    "omegaconf"
 ]
 
 [project.optional-dependencies]

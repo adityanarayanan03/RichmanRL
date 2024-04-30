@@ -163,3 +163,12 @@ class REINFORCE:
             """
             self._update_from_traj(traj, "player_1")
             self._update_from_traj(traj, "player_2")
+
+    def get_policies(self):
+        """Returns all the policies."""
+        return (
+            self.agent_1_bid_pi,
+            self.agent_1_game_pi,
+            self.agent_2_bid_pi,
+            self.agent_2_game_pi,
+        )

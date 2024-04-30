@@ -1,0 +1,3 @@
+env: ttt
+num_evals: 10
+training_trajs: 1_000
