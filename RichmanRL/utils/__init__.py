@@ -13,3 +13,4 @@ from .policy import (
     pickle_policy, # noqa: F401
     get_pickled_policy, # noqa: F401
 )  # noqa: F401
+from .types import AgentTrajectory
