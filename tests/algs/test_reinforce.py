@@ -7,10 +7,12 @@ from RichmanRL.utils import (
     ConstantBaseline,
     NoBiddingPolicy,
     InGameNNPolicy,
+    BiddingNNPolicy,
+    RandomBiddingPolicy
 )
 from pettingzoo.classic import tictactoe_v3
 from tqdm import tqdm
-
+import pdb
 
 def test_trajectory_generation():
     """Makes sure trajectories can be sampled properly."""
@@ -25,23 +27,31 @@ def test_trajectory_generation():
         r,
         NoBiddingPolicy(None, 201, 0),
         RandomGamePolicy(None, 9, 0),
-        NoBiddingPolicy(None, 201, 0),
+        BiddingNNPolicy(19, 201, 0.0003),
         InGameNNPolicy(18, 9, 0.0003),
         0.99,
         10_000,
         ConstantBaseline(),
     )
 
-    for _ in tqdm(range(10_000)):
+    for _ in tqdm(range(1_000)):
         traj = reinforce._generate_trajectory()  # noqa: F841
 
-"""         print("-----Player_1-----")
-        for step in traj["player_1"]:
-            print(f"{step}\n")
-
-        print("-----Player_2-----")
+        #Inspect the trajectory for illegal bids
         for step in traj["player_2"]:
-            print(f"{step}\n") """
+            action = step[2]
+
+            if not action:
+                continue
+
+            legal_bid = step[1]["action_mask"][0]
+            if action["player_2"][0] > legal_bid:
+                print("[ERROR] Found an inconsistency in player_2's trajectory")
+                print(f"[DEBUG] legal bid was {legal_bid} and action was {action}")
+
+                pdb.set_trace()
+
+                assert False
 
 
 def test_reinforce():
@@ -55,32 +65,16 @@ def test_reinforce():
 
     reinforce = REINFORCE(
         r,
-        NoBiddingPolicy(None, 201, 0),
+        RandomBiddingPolicy(None, 201, 0),
         RandomGamePolicy(None, 9, 0),
-        NoBiddingPolicy(None, 201, 0),
+        BiddingNNPolicy(19, 201, 0.0003),
         InGameNNPolicy(18, 9, 0.0003),
         0.99,
-        2000,
+        10_000,
         ConstantBaseline(),
     )
 
     reinforce()
-
-    in_game_policy = reinforce.agent_2_game_pi
-    r = RichmanEnv(
-        env=tictactoe_v3.raw_env(render_mode=None), capital=100, verbose=True
-    )
-
-    reinforce = REINFORCE(
-        r,
-        NoBiddingPolicy(None, 201, 0),
-        RandomGamePolicy(None, 9, 0),
-        NoBiddingPolicy(None, 201, 0),
-        in_game_policy,
-        0.99,
-        1000,
-        ConstantBaseline(),
-    )
 
     total_reward = 0
     for x in tqdm(range(1000)):

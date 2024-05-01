@@ -5,6 +5,8 @@ from pettingzoo.classic import tictactoe_v3
 from tqdm import tqdm
 import time
 
+from RichmanRL.utils import RandomBiddingPolicy, RandomGamePolicy
+
 
 def test_instantiation():
     """Test instantiation of RichmanEnv."""
@@ -154,3 +156,27 @@ def test_reward():
     print(r.observe("player_1"))
     print(r.last("player_1"))
     print(r.last("player_2"))
+
+def test_trajectory_generation():
+    """Makes sure trajectories can be sampled properly."""
+    r = RichmanEnv(
+        env=tictactoe_v3.raw_env(render_mode=None), capital=100, verbose=True
+    )
+
+    r.reset()
+    print("\n")
+
+    a = RandomBiddingPolicy(None, 201, 0)
+    b = RandomGamePolicy(None, 9, 0)
+    c = RandomBiddingPolicy(None, 201, 0)
+    d = RandomGamePolicy(None, 9, 0)
+
+    total_reward = 0
+    for x in tqdm(range(10_000)):
+        traj = r.generate_trajectory(a, b, c, d)  # noqa: F841
+
+        #find out the winner
+        last_reward = traj["player_2"][-1][0]
+        
+        total_reward += last_reward
+    print(f"Total observed reward was {total_reward}")
