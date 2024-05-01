@@ -1,13 +1,15 @@
 """Implements the REINFORCE algorithm."""
 
 from RichmanRL.envs import RichmanEnv
-from RichmanRL.envs.typing_utils import RichmanAction
+from RichmanRL.envs.typing_utils import RichmanAction, RichmanObservation
 from RichmanRL.utils import Policy, ValueFunction
 from itertools import count
 from .typing_utils import AgentTrajectory
 from typing import Union, Literal
 from tqdm import tqdm
 import torch
+import sys
+import logging
 
 
 class REINFORCE:
@@ -23,6 +25,7 @@ class REINFORCE:
         gamma: float,
         num_episodes: int,
         V: ValueFunction,
+        verbose: True
     ) -> None:
         """Constructor for REINFORCE.
 
@@ -35,7 +38,14 @@ class REINFORCE:
             gamma : float - discount rate
             num_episodes : int - number of episodes to train for
             V : ValueFunction - Value function for baseline (optional)
+            verbose: Whether or not to enable logging.
         """
+        self.logger = logging.getLogger("RichmanEnv")
+        if verbose:
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.ERROR)
+
         self.env = env
         self.agent_1_bid_pi = agent_1_bid_pi
         self.agent_1_game_pi = agent_1_game_pi
@@ -45,7 +55,9 @@ class REINFORCE:
         self.num_episodes = num_episodes
         self.V = V
 
-    def _sample_actions(self, S_1, S_2) -> RichmanAction:
+    def _sample_actions(
+        self, S_1: RichmanObservation, S_2: RichmanObservation
+    ) -> RichmanAction:
         """Uses the instantiated policies to sample actions for both agents.
 
         Args:
@@ -60,8 +72,16 @@ class REINFORCE:
         player_1_bid = self.agent_1_bid_pi(S_1)
         player_1_move = self.agent_1_game_pi(S_1)
 
+        if player_1_bid > S_1["action_mask"][0]:
+            print(f"[ERROR] Player 1 sampled illegal action {player_1_bid}")
+            sys.exit(0)
+
         player_2_bid = self.agent_2_bid_pi(S_2)
         player_2_move = self.agent_2_game_pi(S_2)
+
+        if player_2_bid > S_2["action_mask"][0]:
+            print(f"[ERROR] Player 2 sampled illegal action {player_2_bid}")
+            sys.exit(0)
 
         return RichmanAction(
             player_1=(player_1_bid, player_1_move),
@@ -102,7 +122,9 @@ class REINFORCE:
         """Update policies and value functions for a single player."""
         player_traj = traj[agent]
 
+        # print("Updating a whole trajectory")
         for t in range(0, len(player_traj)):
+            # print("Updating from a step of a trajectory")
             gamma_t = self.gamma**t
 
             # Compute the monte carlo return
@@ -153,13 +175,26 @@ class REINFORCE:
             # sample a trajectory for both agents
             traj = self._generate_trajectory()
 
-            """             #We need to inspect the trajectory for any illegal actions
-            for player in ["player_1", "player_2"]:
-                for idx, (reward, state, action) in enumerate(traj[player]):
-                    print(f"Idx in trajectory is {idx}. Reward is {reward}")
-                    if state["action_mask"][1][action[player][1]] == 0:
-                        print(f"FOUND AN ILLEGAL ACTION IN THE TRAJECTORY")
-                        print(f"Player is {player}\n\n") 
-            """
+            # Inspect the trajectory for illegal bids
+            for step in traj["player_2"]:
+                action = step[2]
+
+                if not action:
+                    continue
+
+                legal_bid = step[1]["action_mask"][0]
+                if action["player_2"][0] > legal_bid:
+                    self.logger.error("Found an inconsistency in player_2's trajectory")
+                    self.logger.debug(f"legal bid was {legal_bid} and action was {action}")  # noqa: E501
+
             self._update_from_traj(traj, "player_1")
             self._update_from_traj(traj, "player_2")
+
+    def get_policies(self):
+        """Returns all the policies."""
+        return (
+            self.agent_1_bid_pi,
+            self.agent_1_game_pi,
+            self.agent_2_bid_pi,
+            self.agent_2_game_pi,
+        )
