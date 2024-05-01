@@ -4,13 +4,9 @@ Includes Policy base class.
 """
 
 from RichmanRL.utils import ValueFunction
-from RichmanRL.envs.typing_utils import RichmanObservation, RichmanAction
+from RichmanRL.envs.typing_utils import RichmanObservation
 from abc import ABC, abstractmethod
 import numpy as np
-from .mlp import MLP
-import torch.optim as optim
-from typing import Union, Literal
-import torch
 import pickle
 import os
 
@@ -100,77 +96,6 @@ class RandomGamePolicy(Policy):
     def update(self, *args, **kwargs):
         """Does nothing."""
         pass
-
-
-class InGameNNPolicy(Policy):
-    """Approximation of a policy with a neural network."""
-
-    def __init__(self, input_dimension: int, output_dimension: int, alpha: float):
-        """Constructor.
-
-        Args:
-            input_dimension: Dimension of the flattened state space.
-            output_dimension: Number of actions
-            alpha: For updating with REINFORCE
-        """
-        self.input_dimension = input_dimension
-        self.output_dimension = output_dimension
-        self.alpha = alpha
-
-        self.mlp = MLP(input_dimension, output_dimension)
-
-        self.optimizer = optim.Adam(
-            self.mlp.parameters(), lr=0.0003, betas=(0.9, 0.999)
-        )
-
-    @torch.enable_grad()
-    def update(
-        self,
-        state: RichmanObservation,
-        action: RichmanAction,
-        gamma_t: float,
-        delta: float,
-        agent: Union[Literal["player_1", "player_2"]],
-    ):
-        """One update step of policy gradient algorithm."""
-        if not action:
-            # The last step in trajectory has no valid action.
-            return
-
-        # print("\n")
-        self.mlp.train()
-        self.optimizer.zero_grad()
-
-        state_feature = state["observation"][2].flatten()
-        legal_mask = state["action_mask"][1]
-
-        action_taken = action[agent][1]
-
-        probs = self.mlp(state_feature, legal_mask, return_prob=True)
-
-        # print(f"probs is {probs} and action taken is {action_taken}")
-
-        loss = -1 * torch.log(probs[action_taken]) * self.alpha * gamma_t * delta
-
-        # print(f"Loss is {loss}")
-
-        loss.backward()
-        self.optimizer.step()
-
-    def __call__(self, state: RichmanObservation) -> int:
-        """Callable that returns action for the agent."""
-        state_feature = state["observation"][2].flatten()
-        legal_mask = state["action_mask"][1]
-
-        action_probs = self.mlp(state_feature, legal_mask, return_prob=True)
-
-        _, action = torch.max(action_probs, dim=0)
-
-        # print(f"Legal_mask is {legal_mask}")
-        # print(f"Action_probs is {action_probs}")
-        # print(f"Action is {action}")
-
-        return action
 
 
 def pickle_policy(

@@ -7,8 +7,8 @@ from RichmanRL.algs import REINFORCE
 from RichmanRL.utils import (
     RandomGamePolicy,
     ConstantBaseline,
-    NoBiddingPolicy,
-    InGameNNPolicy,
+    BiddingNNPolicy,
+    RandomBiddingPolicy
 )
 
 
@@ -34,10 +34,10 @@ def reinforce_against_random(
     for i in range(num_evals):
         reinforce = REINFORCE(
             r,
-            NoBiddingPolicy(None, 201, 0),
+            RandomBiddingPolicy(None, 201, 0),
             RandomGamePolicy(None, 9, 0),
-            NoBiddingPolicy(None, 201, 0),
-            InGameNNPolicy(18, 9, 0.0003),
+            BiddingNNPolicy(19, 201, 0.0003),
+            RandomGamePolicy(None, 9, 0),
             0.99,
             training_trajs,
             ConstantBaseline(),
