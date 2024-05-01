@@ -1,10 +1,10 @@
 """A generic wrapper that turns any pettingzoo environment into a Richman game."""
 
+from __future__ import annotations
 from pettingzoo import AECEnv
-from typing import Union, Literal, Tuple
+from typing import Union, Literal
 from gymnasium import spaces
 from .typing_utils import RichmanAction, RichmanObservation
-from RichmanRL.utils import Policy
 from RichmanRL.utils import AgentTrajectory
 import logging
 import numpy as np
@@ -181,7 +181,7 @@ class RichmanEnv:
 
     def last(
         self, agent: Union[Literal["player_1", "player_2"]]
-    ) -> Tuple[RichmanObservation, float, bool, bool, str]:
+    ) -> tuple[RichmanObservation, float, bool, bool, str]:
         """Returns the latest observation and reward for the agent."""
         observation = self.observe(agent)
         reward = self.env.rewards[agent]

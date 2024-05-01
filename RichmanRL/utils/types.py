@@ -1,8 +1,8 @@
 """Collection of typing utilities."""
-from typing import TypedDict, List, Tuple
-from RichmanRL.envs.typing_utils import RichmanObservation, RichmanAction
+from __future__ import annotations
+from typing import TypedDict
 
 class AgentTrajectory(TypedDict):
     """Represents the trajectories viewed by two agents."""
-    player_1: List[Tuple[float, RichmanObservation, RichmanAction]]
-    player_2: List[Tuple[float, RichmanObservation, RichmanAction]]
+    player_1: list[tuple[float, RichmanObservation, RichmanAction]]
+    player_2: list[tuple[float, RichmanObservation, RichmanAction]]

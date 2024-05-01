@@ -1,9 +1,8 @@
 """Neural Network policies for policy gradient."""
-
+from __future__ import annotations
 from .policy import Policy
 import torch
 import torch.optim as optim
-from RichmanRL.envs.typing_utils import RichmanObservation, RichmanAction
 from typing import Union, Literal
 from .mlp import MLP
 import numpy as np
@@ -39,7 +38,7 @@ class InGameNNPolicy(Policy):
         action: RichmanAction,
         gamma_t: float,
         delta: float,
-        agent: Union[Literal["player_1", "player_2"]],
+        agent: Literal["player_1"] | Literal["player_2"],
     ):
         """One update step of policy gradient algorithm."""
         if not action:

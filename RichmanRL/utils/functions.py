@@ -1,7 +1,6 @@
 """Implementations of value functions and value function approximators.."""
-
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from RichmanRL.envs.typing_utils import RichmanObservation
 
 
 class ValueFunction(ABC):
@@ -36,6 +35,6 @@ class ConstantBaseline(ValueFunction):
         """Return the constant baseline."""
         return self.baseline
     
-    def update(self, features, G):
+    def update(self, state, G):
         """Nothing happens on update."""
         pass

@@ -2,9 +2,8 @@
 
 Includes Policy base class.
 """
-
+from __future__ import annotations
 from RichmanRL.utils import ValueFunction
-from RichmanRL.envs.typing_utils import RichmanObservation
 from abc import ABC, abstractmethod
 import numpy as np
 import pickle
