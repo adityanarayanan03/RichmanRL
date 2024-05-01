@@ -8,6 +8,7 @@ from RichmanRL.utils import (
     RandomGamePolicy,
     ConstantBaseline,
     BiddingNNPolicy,
+    InGameNNPolicy,
     RandomBiddingPolicy
 )
 
@@ -37,7 +38,7 @@ def reinforce_against_random(
             RandomBiddingPolicy(None, 201, 0),
             RandomGamePolicy(None, 9, 0),
             BiddingNNPolicy(19, 201, 0.0003),
-            RandomGamePolicy(None, 9, 0),
+            InGameNNPolicy(18, 9, 0.0003),
             0.99,
             training_trajs,
             ConstantBaseline(),

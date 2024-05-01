@@ -1,18 +1,20 @@
 """Tests the behavior of the REINFORCE algorithm."""
 
 from RichmanRL.envs import RichmanEnv
-from RichmanRL.algs import REINFORCE
+from RichmanRL.algs import REINFORCE, train_reinforce_agent
 from RichmanRL.utils import (
     RandomGamePolicy,
     ConstantBaseline,
     NoBiddingPolicy,
     InGameNNPolicy,
     BiddingNNPolicy,
-    RandomBiddingPolicy
+    RandomBiddingPolicy,  # noqa: F401
 )
 from pettingzoo.classic import tictactoe_v3
 from tqdm import tqdm
 import pdb
+from RichmanRL.utils.evaluation import evaluate_policies
+
 
 def test_trajectory_generation():
     """Makes sure trajectories can be sampled properly."""
@@ -37,7 +39,7 @@ def test_trajectory_generation():
     for _ in tqdm(range(1_000)):
         traj = reinforce._generate_trajectory()  # noqa: F841
 
-        #Inspect the trajectory for illegal bids
+        # Inspect the trajectory for illegal bids
         for step in traj["player_2"]:
             action = step[2]
 
@@ -56,32 +58,13 @@ def test_trajectory_generation():
 
 def test_reinforce():
     """Makes sure reinforce runs without errors."""
-    r = RichmanEnv(
-        env=tictactoe_v3.raw_env(render_mode=None), capital=100, verbose=True
-    )
-
-    r.reset()
-    print("\n")
-
-    reinforce = REINFORCE(
-        r,
+    bidding_policy, game_policy = train_reinforce_agent("ttt", 10_000)
+    stats = evaluate_policies(
+        "ttt",
         RandomBiddingPolicy(None, 201, 0),
         RandomGamePolicy(None, 9, 0),
-        BiddingNNPolicy(19, 201, 0.0003),
-        InGameNNPolicy(18, 9, 0.0003),
-        0.99,
-        10_000,
-        ConstantBaseline(),
+        bidding_policy,
+        game_policy,
     )
 
-    reinforce()
-
-    total_reward = 0
-    for x in tqdm(range(1000)):
-        traj = reinforce._generate_trajectory()  # noqa: F841
-
-        #find out the winner
-        last_reward = traj["player_2"][-1][0]
-        
-        total_reward += last_reward
-    print(total_reward)
+    print(f"win, loss, tie is {stats}")

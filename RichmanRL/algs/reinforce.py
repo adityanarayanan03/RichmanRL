@@ -1,15 +1,28 @@
 """Implements the REINFORCE algorithm."""
 
 from RichmanRL.envs import RichmanEnv
+from pettingzoo.classic import tictactoe_v3
 from RichmanRL.envs.typing_utils import RichmanAction, RichmanObservation
 from RichmanRL.utils import Policy, ValueFunction
 from itertools import count
 from .typing_utils import AgentTrajectory
-from typing import Union, Literal
+from typing import Union, Literal, Tuple
 from tqdm import tqdm
 import torch
 import sys
+
+from RichmanRL.utils import (
+    RandomBiddingPolicy,
+    RandomGamePolicy,
+    BiddingNNPolicy,
+    InGameNNPolicy,
+    ConstantBaseline
+)
+
 import logging
+
+logger = logging.getLogger("reinforce.py")
+logger.setLevel(logging.DEBUG)
 
 
 class REINFORCE:
@@ -25,7 +38,7 @@ class REINFORCE:
         gamma: float,
         num_episodes: int,
         V: ValueFunction,
-        verbose: True
+        verbose: bool = True,
     ) -> None:
         """Constructor for REINFORCE.
 
@@ -40,7 +53,7 @@ class REINFORCE:
             V : ValueFunction - Value function for baseline (optional)
             verbose: Whether or not to enable logging.
         """
-        self.logger = logging.getLogger("RichmanEnv")
+        self.logger = logging.getLogger("REINFORCE")
         if verbose:
             self.logger.setLevel(logging.DEBUG)
         else:
@@ -185,7 +198,9 @@ class REINFORCE:
                 legal_bid = step[1]["action_mask"][0]
                 if action["player_2"][0] > legal_bid:
                     self.logger.error("Found an inconsistency in player_2's trajectory")
-                    self.logger.debug(f"legal bid was {legal_bid} and action was {action}")  # noqa: E501
+                    self.logger.debug(
+                        f"legal bid was {legal_bid} and action was {action}"
+                    )  # noqa: E501
 
             self._update_from_traj(traj, "player_1")
             self._update_from_traj(traj, "player_2")
@@ -198,3 +213,41 @@ class REINFORCE:
             self.agent_2_bid_pi,
             self.agent_2_game_pi,
         )
+
+
+def _train_ttt(training_steps: int) -> Tuple[Policy, Policy]:
+    r = RichmanEnv(
+        env=tictactoe_v3.raw_env(render_mode=None), capital=100, verbose=True
+    )
+
+    reinforce = REINFORCE(
+        r,
+        RandomBiddingPolicy(None, 201, 0),
+        RandomGamePolicy(None, 9, 0),
+        BiddingNNPolicy(19, 201, 0.0003),
+        InGameNNPolicy(18, 9, 0.0003),
+        0.99,
+        training_steps,
+        ConstantBaseline(),
+    )
+
+    reinforce()
+
+    return reinforce.get_policies()[2:4]
+
+
+
+def train_reinforce_agent(
+    game: Literal["ttt", "hex"], training_steps: int = 10_000
+) -> Tuple[Policy, Policy]:
+    """Trains a reinforce agent.
+
+    Args:
+        game: Literal["ttt", "hex"] - which game to train an agent for.
+        training_steps: int - Number of steps to train for.
+    """
+    if game == "ttt":
+        return _train_ttt(training_steps)
+    else:
+        logger.error(f"Game {game} not implemented.")
+        raise NotImplementedError(f"Game {game} not implemented.")

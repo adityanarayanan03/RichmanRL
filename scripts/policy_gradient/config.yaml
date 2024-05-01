@@ -1,4 +1,4 @@
 env: ttt
 num_evals: 50
-training_trajs: 1000
+training_trajs: 5_000
 testing_trajs: 1000
