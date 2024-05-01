@@ -4,15 +4,51 @@ from tqdm import tqdm
 import pygame
 import sys
 from env import EnvSpec, Env, EnvWithModel
-from policy import Policy
 
-from dp import value_iteration, value_prediction
 from monte_carlo import off_policy_mc_prediction_ordinary_importance_sampling as mc_ois
 from monte_carlo import off_policy_mc_prediction_weighted_importance_sampling as mc_wis
 from n_step_bootstrap import off_policy_n_step_sarsa as nsarsa
 from n_step_bootstrap import on_policy_n_step_td
+from RichmanRL.utils import Policy, pickle_policy
+from RichmanRL.envs.typing_utils import RichmanObservation
 
 pygame.init()
+
+
+def TTTPolicy(Policy):
+
+    def __init__(self, V: np.array):
+        super(TTTPolicy).__init__(None, 9)
+        self.V = V
+    
+    def stateToNum(self, state):
+        return int(np.dot(state, np.power(3, np.arange(9))))
+    
+    def flatten_board(board):
+        flattened = np.zeros(9, dtype=np.int32)
+        for i in range(3):
+            for j in range(3):
+                if board[i, j, 0] == 1:
+                    flattened[i * 3 + j] = 1  # My piece
+                elif board[i, j, 1] == 1:
+                    flattened[i * 3 + j] = 2  # Opponent's piece
+                else:
+                    flattened[i * 3 + j] = 0  # Empty cell
+        return flattened
+
+    def __call__(self, state: RichmanObservation):
+        board = flatten_board(state[2])
+        valid_actions = np.where(board == 0)[0]
+        action_values = []
+        for index in valid_actions:
+            board[index] = 1
+            action_values.append((index, self.V(stateToNum(board))))
+            board[index] = 0
+        return sorted(action_values, key= lambda x: x[1])[-1]
+    
+    def __update__(self):
+        raise NotImplementedError("Cannot call update function")
+
 
 
 class TTT(Env):  # MDP introduced at Fig 5.4 in Sutton Book
@@ -168,8 +204,10 @@ class BoardVisualizer:
 
 if __name__ == "__main__":
     env = TTT()
-    trajs = [env.generate_traj() for i in tqdm(range(1_000_000))]
+    trajs = [env.generate_traj() for i in tqdm(range(2_000_000))]
     initV = np.zeros(3**9)
     V = on_policy_n_step_td(env.spec, trajs, 2, 0.3, initV)
     b = BoardVisualizer(V, env.seen)
     b.draw()
+    pickle_policy(TTTPolicy(initV), "TTT_n_step_policy", "/home/anant/projects/RichmanRL")
+
