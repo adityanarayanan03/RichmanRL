@@ -1,6 +1,7 @@
 """Implements the REINFORCE algorithm."""
 
 from RichmanRL.envs import RichmanEnv
+from RichmanRL.envs import Hex
 from pettingzoo.classic import tictactoe_v3
 from RichmanRL.envs.typing_utils import RichmanAction, RichmanObservation
 from RichmanRL.utils import Policy, ValueFunction
@@ -235,7 +236,25 @@ def _train_ttt(training_steps: int) -> Tuple[Policy, Policy]:
 
     return reinforce.get_policies()[2:4]
 
-
+def _train_hex(training_steps: int) -> Tuple[Policy, Policy]:
+    r = RichmanEnv(
+        env=Hex(render_mode=None), capital=100, verbose=True
+    )
+    
+    reinforce = REINFORCE(
+        r,
+        RandomBiddingPolicy(None, 201, 0),
+        RandomGamePolicy(None, 121, 0),
+        BiddingNNPolicy(243, 201, 0.0003),
+        InGameNNPolicy(242, 121, 0.0003),
+        0.99,
+        training_steps,
+        ConstantBaseline(),
+    )
+    
+    reinforce()
+    
+    return reinforce.get_policies()[2:4]
 
 def train_reinforce_agent(
     game: Literal["ttt", "hex"], training_steps: int = 10_000
@@ -248,6 +267,8 @@ def train_reinforce_agent(
     """
     if game == "ttt":
         return _train_ttt(training_steps)
+    elif game == "hex":
+        return _train_hex(training_steps)
     else:
         logger.error(f"Game {game} not implemented.")
         raise NotImplementedError(f"Game {game} not implemented.")

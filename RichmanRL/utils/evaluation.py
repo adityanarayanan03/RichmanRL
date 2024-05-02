@@ -1,5 +1,5 @@
 """Contains utilities for evalutation of policies."""
-from RichmanRL.envs import RichmanEnv
+from RichmanRL.envs import RichmanEnv, Hex
 from typing import Literal
 from tqdm import tqdm
 from pettingzoo.classic import tictactoe_v3
@@ -34,8 +34,11 @@ def evaluate_policies(
             env=tictactoe_v3.raw_env(render_mode=None), capital=100, verbose=True
         )
     else:
-        logger.error("Evaluation for hex not implemented yet.")
-        raise NotImplementedError("Evaluation for hex not implemented yet.")
+        r = RichmanEnv(
+            env=Hex(render_mode=None), capital=100, verbose=True
+        )
+        #logger.error("Evaluation for hex not implemented yet.")
+        #raise NotImplementedError("Evaluation for hex not implemented yet.")
 
     wins = 0
     losses = 0

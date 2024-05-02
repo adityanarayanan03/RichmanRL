@@ -22,16 +22,11 @@ logger = logging.getLogger("main.py")
 logger.setLevel(logging.DEBUG)
 
 
-def compare_methods(
-    game: Literal["ttt"] | Literal["hex"],
+def compare_methods_ttt(
     method_1: Literal["random"] | Literal["policy_gradient"],
     method_2: Literal["random"] | Literal["policy_gradient"],
 ) -> tuple[float, float, float]:
     """Compares given methods."""
-    if game == "hex":
-        logger.error("Hex hasn't been implemented yet in compare methods.")
-        raise ValueError("Hex hasn't been implemented yet in compare.")
-
     # Instantiate policies for this method
     if method_1 == "random":
         agent_1_bidding = RandomBiddingPolicy(None, 201, 0)
@@ -69,7 +64,7 @@ def compare_methods(
     return stats
 
 
-def gladiator_ring(
+def gladiator_ring_ttt(
     methods: list = ["random", "policy_gradient"], runs: int = 2
 ) -> list[list[tuple]]:
     """Plays all the methods against each other."""
@@ -86,7 +81,7 @@ def gladiator_ring(
                 logger.info(
                     f"\n Comparing {method1} and {method2} on run {k+1}/{runs}\n"
                 )
-                stats = compare_methods("ttt", method1, method2)
+                stats = compare_methods_ttt(method1, method2)
                 
                 for p in range(3):
                     compare_stats[p] += stats[p]
@@ -100,5 +95,5 @@ if __name__ == "__main__":
     # stats = compare_methods("ttt", "random", "policy_gradient")
     # print(f"[INFO] win, loss, tie for random against policy_gradient is {stats}")
     # logger.info(f"win, loss, tie for random against policy_gradient is {stats}")
-    results = gladiator_ring()
+    results = gladiator_ring_ttt()
     logger.info(results)
