@@ -82,7 +82,7 @@ class Board:  # noqa: D101
             (row - 1, column),
             (row - 1, column + 1),
             (row + 1, column),
-            (row + 1, column + 1),
+            (row + 1, column - 1),
         ]
         ret = []
         for x, y in potentialNeighbors:
@@ -111,7 +111,7 @@ class Hex(AECEnv):  # noqa: D101
         "render_modes": ["human", "rgb_array"],
         "name": "hex_v0",
         "is_parallelizable": False,
-        "render_fps": 1,
+        "render_fps": 50,
     }
 
     def __init__(self, board_size=11, render_mode: str | None = None):  # noqa: D107
@@ -165,8 +165,8 @@ class Hex(AECEnv):  # noqa: D101
         observation = np.stack([cur_p_board, opp_p_board], axis=2).astype(np.int8)
         legal_moves = (
             np.array(self.board.legal)
-            if agent == self.agent_selection
-            else np.zeros(self.board_size**2)
+            #if agent == self.agent_selection
+            #else np.zeros(self.board_size**2)
         )
 
         return {"observation": observation, "action_mask": legal_moves}
@@ -272,7 +272,13 @@ class Hex(AECEnv):  # noqa: D101
 
         if self.render_mode == "human":
             pygame.display.update()
+            
+            if self.board.legal.sum() == 0 and not self.board.check_game_over():
+                while(1):
+                    pass
+            
             self.clock.tick(self.metadata["render_fps"])
+            
 
         observation = np.array(pygame.surfarray.pixels3d(self.screen))
 

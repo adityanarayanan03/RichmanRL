@@ -9,6 +9,7 @@ from RichmanRL.utils import (
     InGameNNPolicy,
     BiddingNNPolicy,
     RandomBiddingPolicy,  # noqa: F401
+    ConservativeBiddingPolicy
 )
 from pettingzoo.classic import tictactoe_v3
 from tqdm import tqdm
@@ -56,7 +57,7 @@ def test_trajectory_generation():
                 assert False
 
 
-def test_reinforce():
+def test_reinforce_ttt():
     """Makes sure reinforce runs without errors."""
     bidding_policy, game_policy = train_reinforce_agent("ttt", 10_000)
     stats = evaluate_policies(
@@ -65,6 +66,20 @@ def test_reinforce():
         RandomGamePolicy(None, 9, 0),
         bidding_policy,
         game_policy,
+    )
+
+    print(f"win, loss, tie is {stats}")
+
+def test_reinforce_hex():
+    """Makes sure reinforce runs without errors."""
+    bidding_policy, game_policy = train_reinforce_agent("hex", 10)
+    stats = evaluate_policies(
+        "hex",
+        RandomBiddingPolicy(None, 201, 0),
+        RandomGamePolicy(None, 121, 0),
+        bidding_policy,
+        game_policy,
+        num_samples= 100
     )
 
     print(f"win, loss, tie is {stats}")
