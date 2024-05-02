@@ -70,7 +70,7 @@ def compare_methods(
 
 
 def gladiator_ring(
-    methods: list = ["random", "policy_gradient"], runs: int = 5
+    methods: list = ["random", "policy_gradient"], runs: int = 2
 ) -> list[list[tuple]]:
     """Plays all the methods against each other."""
     num_methods = len(methods)
@@ -81,12 +81,17 @@ def gladiator_ring(
             if j < i:
                 continue
             
+            compare_stats = [0, 0, 0]
             for k in range(runs):
                 logger.info(
                     f"\n Comparing {method1} and {method2} on run {k+1}/{runs}\n"
                 )
                 stats = compare_methods("ttt", method1, method2)
-                results[i][j] = stats
+                
+                for p in range(3):
+                    compare_stats[p] += stats[p]
+            
+            results[i][j] = tuple([x/runs for x in compare_stats])
 
     return results
 
