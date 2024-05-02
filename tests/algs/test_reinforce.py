@@ -1,7 +1,7 @@
 """Tests the behavior of the REINFORCE algorithm."""
 
 from RichmanRL.envs import RichmanEnv
-from RichmanRL.algs import REINFORCE, train_reinforce_agent
+from RichmanRL.algs import REINFORCE, train_reinforce_agent, HexPolicy, HexBiddingPolicy, HexGamePolicy
 from RichmanRL.utils import (
     RandomGamePolicy,
     ConstantBaseline,
@@ -58,13 +58,19 @@ def test_trajectory_generation():
 
 def test_reinforce():
     """Makes sure reinforce runs without errors."""
-    bidding_policy, game_policy = train_reinforce_agent("ttt", 10_000)
+    bidding_policy, game_policy = train_reinforce_agent("hex", 10_000)
+    hex_base = HexPolicy()
+    hex_game, hex_bidding = HexGamePolicy(hex_base), HexBiddingPolicy(hex_base)
     stats = evaluate_policies(
-        "ttt",
-        RandomBiddingPolicy(None, 201, 0),
-        RandomGamePolicy(None, 9, 0),
+        "hex",
+        # RandomBiddingPolicy(None, 201, 0),
+        # RandomGamePolicy(None, 9, 0),
+        hex_bidding,
+        hex_game,
         bidding_policy,
         game_policy,
     )
 
     print(f"win, loss, tie is {stats}")
+
+test_reinforce()
