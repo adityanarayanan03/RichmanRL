@@ -5,6 +5,8 @@ from RichmanRL.envs import Hex
 from tqdm import tqdm
 import time
 
+from RichmanRL.utils import RandomBiddingPolicy, RandomGamePolicy
+
 
 def test_instantiation():
     """Test instantiation of RichmanEnv."""
@@ -128,9 +130,26 @@ def test_tiebreak():
     print(r.env.terminations)
     r.render()
 
-#test_instantiation()
-test_speed()
-# test_action_space()
-# test_action()
-# test_speed()
-# test_tiebreak()
+def test_trajectory_generation():
+    """Makes sure trajectories can be sampled properly."""
+    r = RichmanEnv(
+        env=Hex(render_mode=None), capital=100, verbose=True
+    )
+
+    r.reset()
+    print("\n")
+
+    a = RandomBiddingPolicy(None, 201, 0)
+    b = RandomGamePolicy(None, 121, 0)
+    c = RandomBiddingPolicy(None, 201, 0)
+    d = RandomGamePolicy(None, 121, 0)
+
+    total_reward = 0
+    for x in tqdm(range(1_000)):
+        traj = r.generate_trajectory(a, b, c, d)  # noqa: F841
+
+        #find out the winner
+        last_reward = traj["player_2"][-1][0]
+        
+        total_reward += last_reward
+    print(f"Total observed reward was {total_reward}")

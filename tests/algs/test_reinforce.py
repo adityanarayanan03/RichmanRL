@@ -9,11 +9,13 @@ from RichmanRL.utils import (
     InGameNNPolicy,
     BiddingNNPolicy,
     RandomBiddingPolicy,  # noqa: F401
+    ConservativeBiddingPolicy
 )
 from pettingzoo.classic import tictactoe_v3
 from tqdm import tqdm
 import pdb
 from RichmanRL.utils.evaluation import evaluate_policies
+from RichmanRL.utils import pickle_policy
 
 
 def test_trajectory_generation():
@@ -56,21 +58,34 @@ def test_trajectory_generation():
                 assert False
 
 
-def test_reinforce():
+def test_reinforce_ttt():
     """Makes sure reinforce runs without errors."""
-    bidding_policy, game_policy = train_reinforce_agent("hex", 10_000)
-    hex_base = HexPolicy()
-    hex_game, hex_bidding = HexGamePolicy(hex_base), HexBiddingPolicy(hex_base)
+    bidding_policy, game_policy = train_reinforce_agent("ttt", 10_000)
     stats = evaluate_policies(
-        "hex",
-        # RandomBiddingPolicy(None, 201, 0),
-        # RandomGamePolicy(None, 9, 0),
-        hex_bidding,
-        hex_game,
+        "ttt",
+        RandomBiddingPolicy(None, 201, 0),
+        RandomGamePolicy(None, 9, 0),
         bidding_policy,
         game_policy,
     )
 
     print(f"win, loss, tie is {stats}")
 
-test_reinforce()
+def test_reinforce_hex():
+    """Makes sure reinforce runs without errors."""
+    bidding_policy, game_policy = train_reinforce_agent("hex", 10_000)
+    hex_base = HexPolicy()
+    hex_game, hex_bidding = HexGamePolicy(hex_base), HexBiddingPolicy(hex_base)
+    stats = evaluate_policies(
+        "hex",
+        hex_bidding,
+        hex_game,
+        bidding_policy,
+        game_policy,
+        num_samples= 100
+    )
+    pickle_policy(bidding_policy, "REINFORCE_BIDDING.pkl", "/home/anant/projects/RichmanRL")
+    pickle_policy(game_policy, "REINFORCE_GAME.pkl", "/home/anant/projects/RichmanRL")
+    print(f"win, loss, tie is {stats}")
+
+test_reinforce_hex()
