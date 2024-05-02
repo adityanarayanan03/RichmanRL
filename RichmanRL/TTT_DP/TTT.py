@@ -9,16 +9,16 @@ from monte_carlo import off_policy_mc_prediction_ordinary_importance_sampling as
 from monte_carlo import off_policy_mc_prediction_weighted_importance_sampling as mc_wis
 from n_step_bootstrap import off_policy_n_step_sarsa as nsarsa
 from n_step_bootstrap import on_policy_n_step_td
-from RichmanRL.utils import Policy, pickle_policy
+from RichmanRL.utils import Policy, pickle_policy, get_pickled_policy
 from RichmanRL.envs.typing_utils import RichmanObservation
 
 pygame.init()
 
 
-def TTTPolicy(Policy):
+class TTTPolicy(Policy):
 
     def __init__(self, V: np.array):
-        super(TTTPolicy).__init__(None, 9)
+        super(TTTPolicy, self).__init__(None, 9)
         self.V = V
     
     def stateToNum(self, state):
@@ -46,7 +46,7 @@ def TTTPolicy(Policy):
             board[index] = 0
         return sorted(action_values, key= lambda x: x[1])[-1]
     
-    def __update__(self):
+    def update(self):
         raise NotImplementedError("Cannot call update function")
 
 
@@ -209,5 +209,5 @@ if __name__ == "__main__":
     V = on_policy_n_step_td(env.spec, trajs, 2, 0.3, initV)
     b = BoardVisualizer(V, env.seen)
     b.draw()
-    pickle_policy(TTTPolicy(initV), "TTT_n_step_policy", "/home/anant/projects/RichmanRL")
-
+    policy = TTTPolicy(initV)
+    pickle_policy(policy, "TTT_n_step_policy.pkl", "/home/anant/projects/RichmanRL")

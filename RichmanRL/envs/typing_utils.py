@@ -1,6 +1,7 @@
 """Contains definitions used exclusively for type checking and type hinting."""
 from typing import Tuple, TypedDict, Any
 
+
 class RichmanAction(TypedDict):
     """Used for typig an action provided to a Richman Game env."""
     player_1: Tuple[int, int]

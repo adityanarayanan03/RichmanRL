@@ -114,8 +114,6 @@ def pickle_policy(
     dir = os.path.join(base_dir, subfolder)
     if not os.path.exists(dir):
         os.mkdir(dir)
-    else:
-        print("GAY")
 
     with open(dir + file_name, "wb") as file:
         pickle.dump(policy, file)
