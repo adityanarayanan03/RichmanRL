@@ -113,6 +113,26 @@ class RandomGamePolicy(Policy):
         """Does nothing."""
         pass
 
+class HumanBiddingPolicy(Policy):
+
+    def __call__(self, state: RichmanObservation):
+        highest_bid = state["action_mask"][0]
+        return int(input(f"What is you bid? (Number between 0 and {highest_bid} inclusive): "))
+    
+    def update(self, *args, **kwargs):
+        """Does nothing."""
+        pass
+
+class HumanGamePolicy(Policy):
+
+    def __call__(self, state: RichmanObservation):
+        return int(input(f"What is you action?: "))
+    
+    def update(self, *args, **kwargs):
+        """Does nothing."""
+        pass
+
+
 
 def pickle_policy(
     policy: Policy,
