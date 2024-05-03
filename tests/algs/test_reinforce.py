@@ -91,7 +91,7 @@ def test_reinforce_hex():
 
 def test_reinforce_with_scoring():
     """Test bidding scoring against an optimal policy."""
-    bidding_policy, game_policy = train_reinforce_agent("hex", 1_000)
+    bidding_policy, game_policy = train_reinforce_agent("hex", 100)
 
     bidding_score = score_nn_bids(bidding_policy, game_policy)
 

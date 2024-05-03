@@ -60,6 +60,7 @@ class InGameNNPolicy(Policy):
         loss.backward()
         self.optimizer.step()
 
+    @torch.no_grad()
     def __call__(self, state: RichmanObservation, return_probs = False) -> int:
         """Callable that returns action for the agent."""
         state_feature = state["observation"][2].flatten()
@@ -143,6 +144,7 @@ class BiddingNNPolicy(Policy):
         loss.backward()
         self.optimizer.step()
 
+    @torch.no_grad
     def __call__(self, state: RichmanObservation, return_probs = False) -> int:
         """Callable that returns action for the agent."""
         bidding_feature = state["observation"][0]  # My own pot size

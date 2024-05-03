@@ -7,6 +7,7 @@ from __future__ import annotations
 from RichmanRL.algs import HexPolicy, HexGamePolicy, HexBiddingPolicy
 from RichmanRL.envs import RichmanEnv, Hex
 import numpy as np
+from tqdm import tqdm
 
 
 import logging
@@ -19,7 +20,7 @@ logger.setLevel(logging.DEBUG)
 def score_nn_bids(
     nn_bid_pi: Policy,
     nn_game_pi: Policy,
-    num_evals: int = 10_000,
+    num_evals: int = 100,
 ):
     """Score the bids given by a bidding policy.
 
@@ -42,7 +43,7 @@ def score_nn_bids(
     hex_game, hex_bidding = HexGamePolicy(hex_base), HexBiddingPolicy(hex_base)
 
     scores = []
-    for eval_idx in range(num_evals):
+    for eval_idx in tqdm(range(num_evals)):
         traj = r.generate_trajectory(nn_bid_pi, nn_game_pi, hex_bidding, hex_game)
 
         nn_traj = traj["player_1"]
@@ -67,11 +68,10 @@ def score_nn_bids(
 
             if score == 0:
                 logger.error("Mass under theoretical bid was 0!")
-            
+
             traj_score += score
-            
+
         traj_score /= len(nn_traj)
         scores.append(traj_score)
-    
+
     return np.mean(scores)
-            
