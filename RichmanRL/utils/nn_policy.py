@@ -60,7 +60,7 @@ class InGameNNPolicy(Policy):
         loss.backward()
         self.optimizer.step()
 
-    def __call__(self, state: RichmanObservation) -> int:
+    def __call__(self, state: RichmanObservation, return_probs = False) -> int:
         """Callable that returns action for the agent."""
         state_feature = state["observation"][2].flatten()
         legal_mask = state["action_mask"][1]
@@ -68,6 +68,9 @@ class InGameNNPolicy(Policy):
         action_probs = self.mlp(state_feature, legal_mask, return_prob=True)
 
         _, action = torch.max(action_probs, dim=0)
+
+        if return_probs:
+            return action_probs.numpy(), int(action)
 
         return int(action)
 
@@ -140,7 +143,7 @@ class BiddingNNPolicy(Policy):
         loss.backward()
         self.optimizer.step()
 
-    def __call__(self, state: RichmanObservation) -> int:
+    def __call__(self, state: RichmanObservation, return_probs = False) -> int:
         """Callable that returns action for the agent."""
         bidding_feature = state["observation"][0]  # My own pot size
         state_feature = state["observation"][2].flatten()  # Game state
@@ -152,5 +155,8 @@ class BiddingNNPolicy(Policy):
         action_probs = self.mlp(input_feature, legal_mask, return_prob=True)
 
         _, action = torch.max(action_probs, dim=0)
+
+        if return_probs:
+            return action_probs.numpy(), int(action)
 
         return int(action)
