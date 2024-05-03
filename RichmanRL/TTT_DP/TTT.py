@@ -116,7 +116,7 @@ class TTT(Env):  # MDP introduced at Fig 5.4 in Sutton Book
 
 
 class BoardVisualizer:
-    def __init__(self, value_function, seen):
+    def __init__(self, values, seen, human=False):
         # Constants
         self.WIDTH, self.HEIGHT = 300, 300
         self.LINE_WIDTH = 5
@@ -132,7 +132,7 @@ class BoardVisualizer:
         self.font = pygame.font.Font(None, 36)
         # Board state
         self.board = np.zeros(9)
-        self.values = value_function
+        self.values = values
         self.seen = seen
 
     def draw_board(self):
@@ -200,6 +200,24 @@ class BoardVisualizer:
                     self.board[3 * row + col] = (self.board[3 * row + col] + 1) % 3
                     self.draw_board()
             pygame.display.flip()
+    
+    def play_human(self):
+
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    return
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    
+                    x, y = pygame.mouse.get_pos()
+                    row = y // self.SQUARE_SIZE
+                    col = x // self.SQUARE_SIZE
+                    self.board[3 * row + col] = (self.board[3 * row + col] + 1) % 3
+                    self.draw_board()
+            pygame.display.flip()
+
 
 
 if __name__ == "__main__":
