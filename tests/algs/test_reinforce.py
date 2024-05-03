@@ -74,7 +74,7 @@ def test_reinforce_ttt():
 
 def test_reinforce_hex():
     """Makes sure reinforce runs without errors."""
-    bidding_policy, game_policy = train_reinforce_agent("hex", 10_000)
+    bidding_policy, game_policy = train_reinforce_agent("hex", 1000)
     hex_base = HexPolicy()
     hex_game, hex_bidding = HexGamePolicy(hex_base), HexBiddingPolicy(hex_base)
     stats = evaluate_policies(
@@ -85,14 +85,14 @@ def test_reinforce_hex():
         game_policy,
         num_samples= 100
     )
-    pickle_policy(bidding_policy, "REINFORCE_BIDDING.pkl", "/home/anant/projects/RichmanRL")
-    pickle_policy(game_policy, "REINFORCE_GAME.pkl", "/home/anant/projects/RichmanRL")
+    #pickle_policy(bidding_policy, "REINFORCE_BIDDING.pkl", "/home/anant/projects/RichmanRL")
+    #pickle_policy(game_policy, "REINFORCE_GAME.pkl", "/home/anant/projects/RichmanRL")
     print(f"win, loss, tie is {stats}")
 
 def test_reinforce_with_scoring():
     """Test bidding scoring against an optimal policy."""
-    bidding_policy, game_policy = train_reinforce_agent("hex", 100)
+    bidding_policy, game_policy = train_reinforce_agent("hex", 1000)
 
-    bidding_score = score_nn_bids(bidding_policy, game_policy)
+    bidding_score = score_nn_bids(bidding_policy, game_policy, 50)
 
     print(f"bidding score is {bidding_score}")

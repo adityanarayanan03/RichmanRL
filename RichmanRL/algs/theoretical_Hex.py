@@ -17,7 +17,7 @@ class HexPolicy(Policy):
             return self.seen_states[self.hash(base_board)]
         mask = base_board != 0
         losing_square = np.zeros((11,11))
-        NUM_TIMES = 200
+        NUM_TIMES = 50
         for i in range(NUM_TIMES):
             random_moves = np.random.randint(1,3, (11,11))
             random_moves[mask] = base_board[mask]

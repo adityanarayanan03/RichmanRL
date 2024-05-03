@@ -66,8 +66,9 @@ def score_nn_bids(
 
             score = nn_probs[theoretical_bid]
 
-            if score == 0:
-                logger.error("Mass under theoretical bid was 0!")
+            #We have a giga problem if the theoretical bid is not legal
+            if not 0 <= theoretical_bid <= S1["action_mask"][0]:
+                raise ValueError("Theoretical bid was not legal!")
 
             traj_score += score
 
