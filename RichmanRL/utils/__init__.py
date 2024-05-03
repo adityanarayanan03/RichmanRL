@@ -9,6 +9,7 @@ from .policy import (
     RandomBiddingPolicy,  # noqa: F401
     RandomGamePolicy,  # noqa: F401
     NoBiddingPolicy,  # noqa: F401
+    ConservativeBiddingPolicy,
     pickle_policy, # noqa: F401
     get_pickled_policy, # noqa: F401
 )  # noqa: F401

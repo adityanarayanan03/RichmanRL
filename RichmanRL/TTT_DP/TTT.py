@@ -24,7 +24,7 @@ class TTTPolicy(Policy):
     def stateToNum(self, state):
         return int(np.dot(state, np.power(3, np.arange(9))))
     
-    def flatten_board(board):
+    def flatten_board(self, board):
         flattened = np.zeros(9, dtype=np.int32)
         for i in range(3):
             for j in range(3):
@@ -37,12 +37,12 @@ class TTTPolicy(Policy):
         return flattened
 
     def __call__(self, state: RichmanObservation):
-        board = flatten_board(state[2])
+        board = self.flatten_board(state["observation"][2])
         valid_actions = np.where(board == 0)[0]
         action_values = []
         for index in valid_actions:
             board[index] = 1
-            action_values.append((index, self.V(stateToNum(board))))
+            action_values.append((index, self.V(self.stateToNum(board))))
             board[index] = 0
         return sorted(action_values, key= lambda x: x[1])[-1]
     
@@ -116,7 +116,7 @@ class TTT(Env):  # MDP introduced at Fig 5.4 in Sutton Book
 
 
 class BoardVisualizer:
-    def __init__(self, value_function, seen):
+    def __init__(self, values, seen, human=False):
         # Constants
         self.WIDTH, self.HEIGHT = 300, 300
         self.LINE_WIDTH = 5
@@ -132,7 +132,7 @@ class BoardVisualizer:
         self.font = pygame.font.Font(None, 36)
         # Board state
         self.board = np.zeros(9)
-        self.values = value_function
+        self.values = values
         self.seen = seen
 
     def draw_board(self):
@@ -200,14 +200,35 @@ class BoardVisualizer:
                     self.board[3 * row + col] = (self.board[3 * row + col] + 1) % 3
                     self.draw_board()
             pygame.display.flip()
+    
+    def play_human(self):
+
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    return
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    
+                    x, y = pygame.mouse.get_pos()
+                    row = y // self.SQUARE_SIZE
+                    col = x // self.SQUARE_SIZE
+                    self.board[3 * row + col] = (self.board[3 * row + col] + 1) % 3
+                    self.draw_board()
+            pygame.display.flip()
+
 
 
 if __name__ == "__main__":
-    env = TTT()
-    trajs = [env.generate_traj() for i in tqdm(range(2_000_000))]
-    initV = np.zeros(3**9)
-    V = on_policy_n_step_td(env.spec, trajs, 2, 0.3, initV)
-    b = BoardVisualizer(V, env.seen)
+    # env = TTT()
+    # trajs = [env.generate_traj() for i in tqdm(range(2_000_000))]
+    # initV = np.zeros(3**9)
+    # V = on_policy_n_step_td(env.spec, trajs, 2, 0.3, initV)
+    # b = BoardVisualizer(V, env.seen)
+    # b.draw()
+    # policy = TTTPolicy(initV)
+    policy = get_pickled_policy("TTT_n_step_policy.pkl", "/home/anant/projects/RichmanRL")
+    b = BoardVisualizer(policy.V, set())
     b.draw()
-    policy = TTTPolicy(initV)
-    pickle_policy(policy, "TTT_n_step_policy.pkl", "/home/anant/projects/RichmanRL")
+

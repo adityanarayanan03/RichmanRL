@@ -77,6 +77,21 @@ class RandomBiddingPolicy(Policy):
         """For a random policy, update does nothing."""
         pass
 
+class ConservativeBiddingPolicy(Policy):
+    
+    def __call__(
+        self,
+        state: RichmanObservation,
+    ) -> int:
+        """For a random policy, just returns a purely random (legal) action."""
+        highest_bid = int(state["action_mask"][0]*0.4)
+        return np.random.randint(highest_bid + 1)
+
+    def update(self, *args, **kwargs):
+        """For a random policy, update does nothing."""
+        pass
+    
+
 
 class RandomGamePolicy(Policy):
     """Fully random policy for a game."""
@@ -85,6 +100,8 @@ class RandomGamePolicy(Policy):
         """For a random policy, just return a purely random (legal) action."""
         legal_mask = state["action_mask"][1]
         legal_probs = self.probs * legal_mask
+        
+        #print(f"[DEBUG] legal mask is {legal_mask}")
 
         legal_indices = [i for i in range(len(legal_probs)) if legal_probs[i] > 0]
 
@@ -95,6 +112,26 @@ class RandomGamePolicy(Policy):
     def update(self, *args, **kwargs):
         """Does nothing."""
         pass
+
+class HumanBiddingPolicy(Policy):
+
+    def __call__(self, state: RichmanObservation):
+        highest_bid = state["action_mask"][0]
+        return int(input(f"What is you bid? (Number between 0 and {highest_bid} inclusive): "))
+    
+    def update(self, *args, **kwargs):
+        """Does nothing."""
+        pass
+
+class HumanGamePolicy(Policy):
+
+    def __call__(self, state: RichmanObservation):
+        return int(input(f"What is you action?: "))
+    
+    def update(self, *args, **kwargs):
+        """Does nothing."""
+        pass
+
 
 
 def pickle_policy(

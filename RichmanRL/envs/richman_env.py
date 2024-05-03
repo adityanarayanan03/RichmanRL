@@ -266,6 +266,7 @@ class RichmanEnv:
 
         S_1, R_1, done1, _, _ = self.last("player_1")
         S_2, R_2, done2, _, _ = self.last("player_2")
+        
 
         for t in count():
             A: RichmanAction = self._sample_actions(
