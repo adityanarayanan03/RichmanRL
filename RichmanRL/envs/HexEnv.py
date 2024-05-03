@@ -36,7 +36,7 @@ class DisjSet:  # noqa: D101
             self.rank[xset] = self.rank[xset] + 1
 
 
-class Board:  # noqa: D101
+class HexBoard:  # noqa: D101
     def __init__(self, size):  # noqa: D107
         self.size = size
         self.board = np.zeros((size, size))
@@ -116,7 +116,7 @@ class Hex(AECEnv):  # noqa: D101
 
     def __init__(self, board_size=11, render_mode: str | None = None):  # noqa: D107
         super().__init__()
-        self.board = Board(board_size)
+        self.board = HexBoard(board_size)
 
         self.agents = ["player_1", "player_2"]
         self.possible_agents = self.agents[:]
@@ -218,7 +218,7 @@ class Hex(AECEnv):  # noqa: D101
 
     def reset(self, seed=None, options=None):  # noqa: D102
         # reset environment
-        self.board = Board(self.board_size)
+        self.board = HexBoard(self.board_size)
 
         self.agents = self.possible_agents[:]
         self.rewards = {i: 0 for i in self.agents}
