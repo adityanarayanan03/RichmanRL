@@ -68,7 +68,8 @@ def test_reinforce_ttt():
         bidding_policy,
         game_policy,
     )
-
+    pickle_policy(bidding_policy, "REINFORCE_BIDDING_TTT.pkl", "/home/anant/projects/RichmanRL")
+    pickle_policy(game_policy, "REINFORCE_GAME_TTT.pkl", "/home/anant/projects/RichmanRL")
     print(f"win, loss, tie is {stats}")
 
 def test_reinforce_hex():
@@ -88,4 +89,4 @@ def test_reinforce_hex():
     pickle_policy(game_policy, "REINFORCE_GAME.pkl", "/home/anant/projects/RichmanRL")
     print(f"win, loss, tie is {stats}")
 
-test_reinforce_hex()
+test_reinforce_ttt()
