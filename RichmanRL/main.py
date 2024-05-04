@@ -90,7 +90,7 @@ def compare_methods_ttt(
 
 def gladiator_ring_ttt(
     methods: list = ["random", "policy_gradient", "policy_gradient_simplified", "Tabular"],
-    runs: int = 15,
+    runs: int = 10,
 ) -> list[list[tuple]]:
     """Plays all the methods against each other."""
     num_methods = len(methods)
