@@ -8,6 +8,7 @@ from RichmanRL.utils import (
     NoBiddingPolicy,
     InGameNNPolicy,
     BiddingNNPolicy,
+    BiddingHexNNPolicy,
     RandomBiddingPolicy,  # noqa: F401
     ConservativeBiddingPolicy
 )

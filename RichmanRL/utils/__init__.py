@@ -13,5 +13,5 @@ from .policy import (
     pickle_policy, # noqa: F401
     get_pickled_policy, # noqa: F401
 )  # noqa: F401
-from .nn_policy import InGameNNPolicy, BiddingNNPolicy  # noqa: F401
+from .nn_policy import InGameNNPolicy, BiddingNNPolicy, BiddingHexNNPolicy  # noqa: F401
 from .types import AgentTrajectory  # noqa: F401

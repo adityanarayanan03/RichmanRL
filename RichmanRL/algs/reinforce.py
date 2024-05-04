@@ -11,14 +11,16 @@ from typing import Union, Literal, Tuple
 from tqdm import tqdm
 import torch
 import sys
+from RichmanRL.algs import HexBiddingPolicy, HexGamePolicy, HexPolicy
 
 from RichmanRL.utils import (
     RandomBiddingPolicy,
     RandomGamePolicy,
     BiddingNNPolicy,
     InGameNNPolicy,
-    ConstantBaseline
+    ConstantBaseline,
 )
+from RichmanRL.utils import get_pickled_policy
 
 import logging
 
@@ -247,6 +249,28 @@ def _train_hex(training_steps: int) -> Tuple[Policy, Policy]:
         RandomGamePolicy(None, 121, 0),
         BiddingNNPolicy(243, 201, 0.0003),
         InGameNNPolicy(242, 121, 0.0003),
+        0.99,
+        training_steps,
+        ConstantBaseline(),
+    )
+    
+    reinforce()
+    
+    return reinforce.get_policies()[2:4]
+
+def _train_hex_2(training_steps: int) -> Tuple[Policy, Policy]:
+    r = RichmanEnv(
+        env=Hex(render_mode=None), capital=100, verbose=True
+    )
+
+    base_policy = HexPolicy()
+    
+    reinforce = REINFORCE(
+        r,
+        HexBiddingPolicy(base_policy),
+        HexGamePolicy(base_policy),
+        HexBiddingPolicy(HexPolicy()),
+        get_pickled_policy("MCTS_Policy.pkl", "/home/aditya/projects/UT/RichmanRL")
         0.99,
         training_steps,
         ConstantBaseline(),
