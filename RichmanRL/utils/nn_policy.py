@@ -1,6 +1,6 @@
 """Neural Network policies for policy gradient."""
 from __future__ import annotations
-from .policy import Policy
+from .policy import Policy, RandomBiddingPolicy, RandomGamePolicy
 import torch
 import torch.optim as optim
 from typing import Union, Literal
@@ -13,7 +13,7 @@ import logging
 class InGameNNPolicy(Policy):
     """Approximation of a policy with a neural network."""
 
-    def __init__(self, input_dimension: int, output_dimension: int, alpha: float):
+    def __init__(self, input_dimension: int, output_dimension: int, alpha: float, epsilon = 0):
         """Constructor.
 
         Args:
@@ -30,6 +30,11 @@ class InGameNNPolicy(Policy):
         self.optimizer = optim.Adam(
             self.mlp.parameters(), lr=0.0001, betas=(0.9, 0.999)
         )
+        
+        self.epsilon = epsilon
+        
+        #Make these things epsilon greedy
+        self.random = RandomGamePolicy(None, output_dimension, self.epsilon)
 
     @torch.enable_grad()
     def update(
@@ -72,6 +77,9 @@ class InGameNNPolicy(Policy):
     @torch.no_grad()
     def __call__(self, state: RichmanObservation, return_probs = False) -> int:
         """Callable that returns action for the agent."""
+        if np.random.random() < self.epsilon and not return_probs:
+            return self.random(state)
+        
         state_feature = state["observation"][2].flatten()
         legal_mask = state["action_mask"][1]
 
@@ -89,7 +97,7 @@ class BiddingNNPolicy(Policy):
     """Approximation of a bidding policy with a neural network."""
 
     def __init__(
-        self, input_dimension: int, output_dimension: int, alpha: float, verbose=True
+        self, input_dimension: int, output_dimension: int, alpha: float, verbose=True, epsilon = 0
     ):
         """Constructor.
 
@@ -112,8 +120,11 @@ class BiddingNNPolicy(Policy):
         self.mlp = MLP(input_dimension, output_dimension)
 
         self.optimizer = optim.Adam(
-            self.mlp.parameters(), lr=0.0003, betas=(0.9, 0.999)
+            self.mlp.parameters(), lr=0.0001, betas=(0.9, 0.999)
         )
+        
+        self.epsilon = epsilon
+        self.random = RandomBiddingPolicy(None, output_dimension, self.epsilon)
 
     @torch.enable_grad()
     def update(
@@ -141,6 +152,9 @@ class BiddingNNPolicy(Policy):
 
         action_taken = action[agent][0]
 
+        
+        #print(f"[ERROR] Agent {agent} took illegal action {action_taken}. Legal mask is {legal_mask}, len= {len(legal_mask)}")
+
         if legal_mask[action_taken] == 0:
             print(f"[ERROR] Agent {agent} took an illegal action {action}")
             print(f"[ERROR] Legal bid was {legal_bid} and action was {action_taken}")  # noqa: E501
@@ -162,6 +176,9 @@ class BiddingNNPolicy(Policy):
     #@torch.no_grad
     def __call__(self, state: RichmanObservation, return_probs = False) -> int:
         """Callable that returns action for the agent."""
+        if np.random.random() < self.epsilon and not return_probs:
+            return self.random(state)
+        
         bidding_feature = state["observation"][0]  # My own pot size
         state_feature = state["observation"][2].flatten()  # Game state
         input_feature = np.concatenate([[bidding_feature], state_feature])

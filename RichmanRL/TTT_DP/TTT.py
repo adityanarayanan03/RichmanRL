@@ -3,12 +3,12 @@ import numpy as np
 from tqdm import tqdm
 import pygame
 import sys
-from env import EnvSpec, Env, EnvWithModel
+from .env import EnvSpec, Env, EnvWithModel
 
-from monte_carlo import off_policy_mc_prediction_ordinary_importance_sampling as mc_ois
-from monte_carlo import off_policy_mc_prediction_weighted_importance_sampling as mc_wis
-from n_step_bootstrap import off_policy_n_step_sarsa as nsarsa
-from n_step_bootstrap import on_policy_n_step_td
+from .monte_carlo import off_policy_mc_prediction_ordinary_importance_sampling as mc_ois
+from .monte_carlo import off_policy_mc_prediction_weighted_importance_sampling as mc_wis
+from .n_step_bootstrap import off_policy_n_step_sarsa as nsarsa
+from .n_step_bootstrap import on_policy_n_step_td
 from RichmanRL.utils import Policy, pickle_policy, get_pickled_policy
 from RichmanRL.envs.typing_utils import RichmanObservation
 
@@ -42,9 +42,10 @@ class TTTPolicy(Policy):
         action_values = []
         for index in valid_actions:
             board[index] = 1
-            action_values.append((index, self.V(self.stateToNum(board))))
+            action_values.append((index, self.V[self.stateToNum(board)]))
             board[index] = 0
-        return sorted(action_values, key= lambda x: x[1])[-1]
+        
+        return sorted(action_values, key= lambda x: x[1])[-1][0]
     
     def update(self):
         raise NotImplementedError("Cannot call update function")
@@ -201,6 +202,12 @@ class BoardVisualizer:
                     self.draw_board()
             pygame.display.flip()
 
+def get_policy():
+    env = TTT()
+    trajs = [env.generate_traj() for i in tqdm(range(1_000))]
+    initV = np.zeros(3**9)
+    V = on_policy_n_step_td(env.spec, trajs, 2, 0.3, initV)
+    return TTTPolicy(initV)
 
 if __name__ == "__main__":
     # env = TTT()

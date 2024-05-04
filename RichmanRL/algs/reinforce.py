@@ -357,16 +357,60 @@ def _train_ttt(training_steps: int) -> Tuple[Policy, Policy]:
         r,
         RandomBiddingPolicy(None, 201, 0),
         RandomGamePolicy(None, 9, 0),
-        BiddingNNPolicy(19, 201, 0.0003),
-        InGameNNPolicy(18, 9, 0.0003),
+        BiddingNNPolicy(19, 201, 0.0003, epsilon=0.2),
+        InGameNNPolicy(18, 9, 0.0003, epsilon=0.2),
         0.99,
         training_steps,
         ConstantBaseline(),
     )
 
     reinforce()
+    
+    bidding_pi, game_pi = reinforce.get_policies()[2:4]
+    bidding_pi.epsilon = 0.01
+    game_pi.epsilon = 0.01
 
-    return reinforce.get_policies()[2:4]
+    return bidding_pi, game_pi
+
+def _train_ttt_simplified(training_steps: int) -> Tuple[Policy, Policy]:
+    r = RichmanEnv(
+        env=tictactoe_v3.raw_env(render_mode=None), capital=100, verbose=True
+    )
+    
+    reinforce = REINFORCE(
+        r,
+        NoBiddingPolicy(None, 201, 0),
+        RandomGamePolicy(None, 9, 0),
+        NoBiddingPolicy(None, 201, 0),
+        InGameNNPolicy(18, 9, 0.0003, epsilon=0.2),
+        0.99,
+        training_steps,
+        ConstantBaseline(),
+    )
+    
+    reinforce()
+    
+    learned_game_policy = reinforce.get_policies()[3]
+    learned_game_policy.epsilon = 0.01
+    
+    reinforce = REINFORCE(
+        r,
+        RandomBiddingPolicy(None, 201, 0),
+        RandomGamePolicy(None, 9, 0),
+        BiddingNNPolicy(19, 201, 0.0003, epsilon=0.2),
+        learned_game_policy,
+        0.99,
+        training_steps,
+        ConstantBaseline(),
+        freeze_game=True
+    )
+    
+    reinforce()
+    
+    reinforce.agent_2_bid_pi.epsilon = 0.01
+    learned_bidding_policy, learned_game_policy = reinforce.get_policies()[2:4]
+    
+    return learned_bidding_policy, learned_game_policy
 
 def _train_hex_simplified(training_steps: int) -> Tuple[Policy, Policy]:
     r = RichmanEnv(env=Hex(render_mode=None), capital=100, verbose=True)
@@ -377,7 +421,7 @@ def _train_hex_simplified(training_steps: int) -> Tuple[Policy, Policy]:
         NoBiddingPolicy(None, 201, 0),
         RandomGamePolicy(None, 121, 0),
         NoBiddingPolicy(None, 201, 0.0003),
-        InGameNNPolicy(242, 121, 0.0003),
+        InGameNNPolicy(242, 121, 0.0003, 0.2),
         0.99,
         1_000,
         ConstantBaseline(),
@@ -386,16 +430,17 @@ def _train_hex_simplified(training_steps: int) -> Tuple[Policy, Policy]:
     reinforce()
     
     learned_game_policy = reinforce.get_policies()[3]
+    learned_game_policy.epsilon = 0
     
-    stats = reinforce._evaluate_models()
-    print(f"[INFO] Evaluation of learned game policy is {stats}")
+    #stats = reinforce._evaluate_models()
+    #print(f"[INFO] Evaluation of learned game policy is {stats}")
     
     #Now we learn the bidding policy
     reinforce = REINFORCE(
         r,
         RandomBiddingPolicy(None, 201, 0),
         RandomGamePolicy(None, 121, 0),
-        BiddingNNPolicy(243, 121, 0.0003),
+        BiddingNNPolicy(243, 201, 0.0003, epsilon=0.3),
         learned_game_policy,
         0.99,
         1_000,
@@ -405,10 +450,12 @@ def _train_hex_simplified(training_steps: int) -> Tuple[Policy, Policy]:
     
     reinforce()
     
+    reinforce.agent_2_bid_pi.epsilon = 0
+    
     learned_bidding_policy, learned_game_policy = reinforce.get_policies()[2:4]
     
-    stats = reinforce._evaluate_models()
-    print(f"[INFO] Evaluation of learned both policies is {stats}")
+    #stats = reinforce._evaluate_models()
+    #print(f"[INFO] Evaluation of learned both policies is {stats}")
     
     return learned_bidding_policy, learned_game_policy
 
@@ -419,21 +466,24 @@ def _train_hex(training_steps: int) -> Tuple[Policy, Policy]:
         r,
         RandomBiddingPolicy(None, 201, 0),
         RandomGamePolicy(None, 121, 0),
-        BiddingNNPolicy(243, 201, 0.0003),
-        InGameNNPolicy(242, 121, 0.0003),
+        BiddingNNPolicy(243, 201, 0.0003, epsilon=0.2),
+        InGameNNPolicy(242, 121, 0.0003, epsilon=0.2),
         0.99,
         training_steps,
         ConstantBaseline(),
-        evaluate_every= 50
     )
 
     reinforce()
+    
+    bidding_pi, game_pi = reinforce.get_policies()[2:4]
+    bidding_pi.epsilon = 0
+    game_pi.epsilon = 0
 
-    return reinforce.get_policies()[2:4]
+    return bidding_pi, game_pi
 
 
 def train_reinforce_agent(
-    game: Literal["ttt", "hex"], training_steps: int = 100_000
+    game: Literal["ttt", "ttt_simplified", "hex"], training_steps: int = 10_000
 ) -> Tuple[Policy, Policy]:
     """Trains a reinforce agent.
 
@@ -443,6 +493,8 @@ def train_reinforce_agent(
     """
     if game == "ttt":
         return _train_ttt(training_steps)
+    elif game == "ttt_simplified":
+        return _train_ttt_simplified(training_steps)
     elif game == "hex":
         return _train_hex_simplified(training_steps)
     else:

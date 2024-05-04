@@ -2,6 +2,7 @@
 
 Includes Policy base class.
 """
+
 from __future__ import annotations
 from RichmanRL.utils import ValueFunction
 from abc import ABC, abstractmethod
@@ -49,7 +50,7 @@ class Policy(ABC):
 class NoBiddingPolicy(Policy):
     """Useful for learning game policies independently."""
 
-    def __call__(self, state: RichmanObservation, return_probs = False) -> int:
+    def __call__(self, state: RichmanObservation, return_probs=False) -> int:
         """Always returns the same number (0).
 
         Ties on bidding passed into the RichmanEnv will result in a
@@ -67,47 +68,53 @@ class NoBiddingPolicy(Policy):
 class RandomBiddingPolicy(Policy):
     """Fully random policy."""
 
-    def __call__(
-        self,
-        state: RichmanObservation,
-    ) -> int:
+    def __call__(self, state: RichmanObservation, return_probs=False) -> int:
         """For a random policy, just returns a purely random (legal) action."""
         highest_bid = state["action_mask"][0]
+
+        if return_probs:
+            return [
+                1 / (highest_bid + 1) if i <= highest_bid else 0
+                for i in range(self.num_actions)
+            ], np.random.randint(highest_bid + 1)
+
         return np.random.randint(highest_bid + 1)
 
     def update(self, *args, **kwargs):
         """For a random policy, update does nothing."""
         pass
 
+
 class ConservativeBiddingPolicy(Policy):
-    
     def __call__(
         self,
         state: RichmanObservation,
     ) -> int:
         """For a random policy, just returns a purely random (legal) action."""
-        highest_bid = int(state["action_mask"][0]*0.4)
+        highest_bid = int(state["action_mask"][0] * 0.4)
         return np.random.randint(highest_bid + 1)
 
     def update(self, *args, **kwargs):
         """For a random policy, update does nothing."""
         pass
-    
 
 
 class RandomGamePolicy(Policy):
     """Fully random policy for a game."""
 
-    def __call__(self, state: RichmanObservation) -> int:
+    def __call__(self, state: RichmanObservation, return_probs = False) -> int:
         """For a random policy, just return a purely random (legal) action."""
         legal_mask = state["action_mask"][1]
         legal_probs = self.probs * legal_mask
-        
-        #print(f"[DEBUG] legal mask is {legal_mask}")
+
+        # print(f"[DEBUG] legal mask is {legal_mask}")
 
         legal_indices = [i for i in range(len(legal_probs)) if legal_probs[i] > 0]
 
         index = np.random.choice(legal_indices)
+        
+        if return_probs:
+            return legal_probs, index
 
         return index
 
@@ -142,14 +149,14 @@ def get_pickled_policy(
     file_name: str, base_dir: str, subfolder: str = "saved_models/policies/"
 ) -> Policy:
     """Returns a pickled policy.
-    
+
     Args:
         file_name: str - Name to give the pickle file
         base_dir: str - Location of RichmanRL base on this computer
         subfolder: str - default saved_models/policies/
     """
     dir = os.path.join(base_dir, subfolder)
-    with open(dir+file_name, 'rb') as file:
+    with open(dir + file_name, "rb") as file:
         policy = pickle.load(file)
-    
+
     return policy

@@ -1,8 +1,8 @@
 from typing import Iterable, Tuple
 
 import numpy as np
-from env import EnvSpec
-from policy import Policy
+from .env import EnvSpec
+from .policy import Policy
 
 
 def off_policy_mc_prediction_ordinary_importance_sampling(
