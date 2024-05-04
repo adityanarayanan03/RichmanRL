@@ -13,6 +13,7 @@ from MCTS import MCTS
 from RichmanRL.utils import Policy
 from hex.hex_game import HexMCTSRandomGame
 
+
 log = logging.getLogger(__name__)
 
 class HexMCTSPolicy(Policy):
@@ -29,10 +30,9 @@ class HexMCTSPolicy(Policy):
         self.nnet = nnet
         self.game = HexMCTSRandomGame()
 
-    @abstractmethod
     def __call__(
         self,
-        state: RichmanObservation,
+        state,
     ) -> int:
         """All policies must be callable, returning an action."""
         # Generics would be a better way to type hint this.
@@ -42,7 +42,6 @@ class HexMCTSPolicy(Policy):
         pi /= pi.sum()
         return np.random.choice(len(pi), p=pi)
 
-    @abstractmethod
     def update(self, *args, **kwargs):
         """All policies must have an update method.
 
