@@ -15,3 +15,4 @@ from .policy import (
 )  # noqa: F401
 from .nn_policy import InGameNNPolicy, BiddingNNPolicy, BiddingHexNNPolicy  # noqa: F401
 from .types import AgentTrajectory  # noqa: F401
+from .evaluation import evaluate_policies

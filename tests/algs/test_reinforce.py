@@ -16,7 +16,10 @@ from pettingzoo.classic import tictactoe_v3
 from tqdm import tqdm
 import pdb
 from RichmanRL.utils.evaluation import evaluate_policies
-from RichmanRL.utils import pickle_policy, get_pickled_policy
+from RichmanRL.utils import pickle_policy
+from RichmanRL.alpha_zero_general import Coach, HexMCTSPolicy
+import os
+import pickle
 
 
 def test_trajectory_generation():
@@ -90,13 +93,20 @@ def test_reinforce_hex():
     pickle_policy(game_policy, "REINFORCE_GAME.pkl", "/home/anant/projects/RichmanRL")
     print(f"win, loss, tie is {stats}")
 
-base_policy = HexPolicy()
-stats = evaluate_policies(
-        "hex",
-        HexBiddingPolicy(base_policy),
-        HexGamePolicy(base_policy),
-        HexBiddingPolicy(HexPolicy()),
-        get_pickled_policy("MCTS_Policy.pkl", "/home/aditya/projects/UT/RichmanRL"))
-print(f"win, loss, tie is {stats}")
+def get_pickled_policy(
+    file_name: str, base_dir: str, subfolder: str = "saved_models/policies/"
+):
+    """Returns a pickled policy.
+    
+    Args:
+        file_name: str - Name to give the pickle file
+        base_dir: str - Location of RichmanRL base on this computer
+        subfolder: str - default saved_models/policies/
+    """
+    dir = os.path.join(base_dir, subfolder)
+    with open(dir+file_name, 'rb') as file:
+        policy = pickle.load(file)
+    
+    return policy
 
 

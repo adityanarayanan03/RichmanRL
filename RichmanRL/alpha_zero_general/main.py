@@ -2,11 +2,13 @@ import logging
 
 import coloredlogs
 
-from Coach import Coach
+from RichmanRL.alpha_zero_general.coach import Coach
 from hex.hex_game import HexMCTSRandomGame as Game
 from hex.pytorch.NNet import NNetWrapper as nn
 from utils import *
 from RichmanRL.utils import pickle_policy
+from RichmanRL.algs import HexBiddingPolicy, HexGamePolicy, HexPolicy
+from RichmanRL.utils import evaluate_policies
 
 log = logging.getLogger(__name__)
 
@@ -52,8 +54,14 @@ def main():
 
     log.info('Starting the learning process 🎉')
     c.learn()
-    pickle_policy(c.get_policy(), "MCTS_Policy.pkl", "/home/aditya/projects/UT/RichmanRL")
-
+    base_policy = HexPolicy()
+    stats = evaluate_policies(
+            "hex",
+            HexBiddingPolicy(base_policy),
+            HexGamePolicy(base_policy),
+            HexBiddingPolicy(HexPolicy()),
+            c.get_policy())
+    print(f"win, loss, tie is {stats}")
 
 if __name__ == "__main__":
     main()

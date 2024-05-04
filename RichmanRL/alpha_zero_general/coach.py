@@ -8,10 +8,10 @@ from random import shuffle
 import numpy as np
 from tqdm import tqdm
 
-from Arena import Arena
-from MCTS import MCTS
+from .Arena import Arena
+from .MCTS import MCTS
 from RichmanRL.utils import Policy
-from hex.hex_game import HexMCTSRandomGame
+from .hex.hex_game import HexMCTSRandomGame
 
 
 log = logging.getLogger(__name__)

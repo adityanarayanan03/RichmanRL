@@ -11,7 +11,7 @@ from typing import Union, Literal, Tuple
 from tqdm import tqdm
 import torch
 import sys
-from RichmanRL.algs import HexBiddingPolicy, HexGamePolicy, HexPolicy
+from .theoretical_Hex import HexBiddingPolicy, HexGamePolicy, HexPolicy
 
 from RichmanRL.utils import (
     RandomBiddingPolicy,
