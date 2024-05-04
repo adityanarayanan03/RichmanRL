@@ -22,10 +22,11 @@ from RichmanRL.utils import (
     BiddingNNPolicy,
     InGameNNPolicy,
     ConstantBaseline,
-    NoBiddingPolicy
+    NoBiddingPolicy,
 )
 
 import logging
+
 logging.basicConfig()
 
 logger = logging.getLogger("reinforce.py")
@@ -47,7 +48,7 @@ class REINFORCE:
         V: ValueFunction,
         verbose: bool = True,
         evaluate_every: int = None,
-        freeze_game: bool = False
+        freeze_game: bool = False,
     ) -> None:
         """Constructor for REINFORCE.
 
@@ -78,7 +79,7 @@ class REINFORCE:
         self.V = V
 
         self.evaluate_every = evaluate_every
-        
+
         self.freeze_game = freeze_game
 
     def _sample_actions(
@@ -125,20 +126,24 @@ class REINFORCE:
 
         for t in count():
             A: RichmanAction = self._sample_actions(S_1, S_2)
-            
-            #Confirm that all actions are legal
+
+            # Confirm that all actions are legal
             if A["player_1"][0] > S_1["action_mask"][0]:
                 raise ValueError("Player 1 played an illegal bid")
-        
+
             if S_1["action_mask"][1][A["player_1"][1]] == 0:
                 raise ValueError("Player 1 played an illegal move in Hex")
-            
+
             if A["player_2"][0] > S_2["action_mask"][0]:
                 raise ValueError("Player 2 played an illegal bid")
-            
+
             if S_2["action_mask"][1][A["player_2"][1]] == 0:
-                print(f"[DEBUG] On illegal move, network probs are {self.agent_2_game_pi(S_2, return_probs = True)}")
-                raise ValueError(f"Player 2 played an illegal move {A['player_2'][1]} in Hex.")
+                print(
+                    f"[DEBUG] On illegal move, network probs are {self.agent_2_game_pi(S_2, return_probs = True)}"
+                )
+                raise ValueError(
+                    f"Player 2 played an illegal move {A['player_2'][1]} in Hex."
+                )
 
             traj["player_1"].append((R_1, S_1, A))
             traj["player_2"].append((R_2, S_2, A))
@@ -214,11 +219,12 @@ class REINFORCE:
     def __call__(self):
         """Runs the actual learning."""
         for episode_idx in tqdm(range(self.num_episodes)):
-            
             if self.evaluate_every and episode_idx % self.evaluate_every == 0:
                 stats = self._evaluate_models()
-                print(f"\n[INFO] Evaluation after training episode {episode_idx} is: {stats}")
-                
+                print(
+                    f"\n[INFO] Evaluation after training episode {episode_idx} is: {stats}"
+                )
+
             # sample a trajectory for both agents
             traj = self._generate_trajectory()
 
@@ -238,7 +244,6 @@ class REINFORCE:
                 
                 legal_moves = step[1]["action_mask"][1]
                 if legal_moves[action["player_2"][1] """
-                
 
             self._update_from_traj(traj, "player_1")
             self._update_from_traj(traj, "player_2")
@@ -262,10 +267,13 @@ class REINFORCE:
             self.agent_2_game_pi,
             num_samples=100,
         )
-        
-        bidding_score, game_score = score_nn(self.agent_2_bid_pi, self.agent_2_game_pi, num_evals=30)
-        
+
+        bidding_score, game_score = score_nn(
+            self.agent_2_bid_pi, self.agent_2_game_pi, num_evals=30
+        )
+
         return play_w_random, bidding_score, game_score
+
 
 def score_nn(
     nn_bid_pi: Policy,
@@ -319,23 +327,23 @@ def score_nn(
             nn_probs, nn_taken = nn_bid_pi(
                 S1, return_probs=True
             )  # What did we do instead?
-            
-            #print(f"[DEBG] before game policy")
+
+            # print(f"[DEBG] before game policy")
             theoretical_game_action, _ = hex_game(S1, return_prob=True)
-            #print(f"[DEBUG] Theoretical game action vector is {theoretical_game_action}")
-            nn_game_action_probs, _ = nn_game_pi(S1, return_probs = True)
-            
-            #Compare with kendall tau
-            #print(f"[DEBUG] Shape of theoretical is {theoretical_game_action.shape}")
-            #print(f"[DEBUG] Shape of nn is {nn_game_action_probs.shape}")
+            # print(f"[DEBUG] Theoretical game action vector is {theoretical_game_action}")
+            nn_game_action_probs, _ = nn_game_pi(S1, return_probs=True)
+
+            # Compare with kendall tau
+            # print(f"[DEBUG] Shape of theoretical is {theoretical_game_action.shape}")
+            # print(f"[DEBUG] Shape of nn is {nn_game_action_probs.shape}")
             res = stats.kendalltau(theoretical_game_action, nn_game_action_probs)
             game_scores.append(res.statistic)
-            #print(f"[DEBUG] kendall tau is {res.statistic}")
+            # print(f"[DEBUG] kendall tau is {res.statistic}")
 
             score = nn_probs[theoretical_bid]
-            #print(f"[DEBUG] Score is {score}")
-            #print(f"[DEBUG] nn_probs is {nn_probs}")
-            #print(f"[DEBUG] Theoretical bid is {theoretical_bid}")
+            # print(f"[DEBUG] Score is {score}")
+            # print(f"[DEBUG] nn_probs is {nn_probs}")
+            # print(f"[DEBUG] Theoretical bid is {theoretical_bid}")
 
             # We have a giga problem if the theoretical bid is not legal
             if not 0 <= theoretical_bid <= S1["action_mask"][0]:
@@ -347,6 +355,7 @@ def score_nn(
         scores.append(traj_score)
 
     return np.mean(scores), np.mean(game_scores)
+
 
 def _train_ttt(training_steps: int) -> Tuple[Policy, Policy]:
     r = RichmanEnv(
@@ -365,18 +374,19 @@ def _train_ttt(training_steps: int) -> Tuple[Policy, Policy]:
     )
 
     reinforce()
-    
+
     bidding_pi, game_pi = reinforce.get_policies()[2:4]
     bidding_pi.epsilon = 0.01
     game_pi.epsilon = 0.01
 
     return bidding_pi, game_pi
 
+
 def _train_ttt_simplified(training_steps: int) -> Tuple[Policy, Policy]:
     r = RichmanEnv(
         env=tictactoe_v3.raw_env(render_mode=None), capital=100, verbose=True
     )
-    
+
     reinforce = REINFORCE(
         r,
         NoBiddingPolicy(None, 201, 0),
@@ -387,12 +397,12 @@ def _train_ttt_simplified(training_steps: int) -> Tuple[Policy, Policy]:
         training_steps,
         ConstantBaseline(),
     )
-    
+
     reinforce()
-    
+
     learned_game_policy = reinforce.get_policies()[3]
     learned_game_policy.epsilon = 0.01
-    
+
     reinforce = REINFORCE(
         r,
         RandomBiddingPolicy(None, 201, 0),
@@ -402,20 +412,21 @@ def _train_ttt_simplified(training_steps: int) -> Tuple[Policy, Policy]:
         0.99,
         training_steps,
         ConstantBaseline(),
-        freeze_game=True
+        freeze_game=True,
     )
-    
+
     reinforce()
-    
+
     reinforce.agent_2_bid_pi.epsilon = 0.01
     learned_bidding_policy, learned_game_policy = reinforce.get_policies()[2:4]
-    
+
     return learned_bidding_policy, learned_game_policy
+
 
 def _train_hex_simplified(training_steps: int) -> Tuple[Policy, Policy]:
     r = RichmanEnv(env=Hex(render_mode=None), capital=100, verbose=True)
-    
-    #First we learn the game policy really well
+
+    # First we learn the game policy really well
     reinforce = REINFORCE(
         r,
         NoBiddingPolicy(None, 201, 0),
@@ -426,16 +437,16 @@ def _train_hex_simplified(training_steps: int) -> Tuple[Policy, Policy]:
         1_000,
         ConstantBaseline(),
     )
-    
+
     reinforce()
-    
+
     learned_game_policy = reinforce.get_policies()[3]
-    learned_game_policy.epsilon = 0
-    
-    #stats = reinforce._evaluate_models()
-    #print(f"[INFO] Evaluation of learned game policy is {stats}")
-    
-    #Now we learn the bidding policy
+    learned_game_policy.epsilon = 0.01
+
+    # stats = reinforce._evaluate_models()
+    # print(f"[INFO] Evaluation of learned game policy is {stats}")
+
+    # Now we learn the bidding policy
     reinforce = REINFORCE(
         r,
         RandomBiddingPolicy(None, 201, 0),
@@ -445,19 +456,20 @@ def _train_hex_simplified(training_steps: int) -> Tuple[Policy, Policy]:
         0.99,
         1_000,
         ConstantBaseline(),
-        freeze_game = True
+        freeze_game=True,
     )
-    
+
     reinforce()
-    
-    reinforce.agent_2_bid_pi.epsilon = 0
-    
+
+    reinforce.agent_2_bid_pi.epsilon = 0.01
+
     learned_bidding_policy, learned_game_policy = reinforce.get_policies()[2:4]
-    
-    #stats = reinforce._evaluate_models()
-    #print(f"[INFO] Evaluation of learned both policies is {stats}")
-    
+
+    # stats = reinforce._evaluate_models()
+    # print(f"[INFO] Evaluation of learned both policies is {stats}")
+
     return learned_bidding_policy, learned_game_policy
+
 
 def _train_hex(training_steps: int) -> Tuple[Policy, Policy]:
     r = RichmanEnv(env=Hex(render_mode=None), capital=100, verbose=True)
@@ -474,16 +486,17 @@ def _train_hex(training_steps: int) -> Tuple[Policy, Policy]:
     )
 
     reinforce()
-    
+
     bidding_pi, game_pi = reinforce.get_policies()[2:4]
-    bidding_pi.epsilon = 0
-    game_pi.epsilon = 0
+    bidding_pi.epsilon = 0.01
+    game_pi.epsilon = 0.01
 
     return bidding_pi, game_pi
 
 
 def train_reinforce_agent(
-    game: Literal["ttt", "ttt_simplified", "hex"], training_steps: int = 10_000
+    game: Literal["ttt", "ttt_simplified", "hex", "hex_simplified"],
+    training_steps: int = 10_000,
 ) -> Tuple[Policy, Policy]:
     """Trains a reinforce agent.
 
@@ -496,6 +509,8 @@ def train_reinforce_agent(
     elif game == "ttt_simplified":
         return _train_ttt_simplified(training_steps)
     elif game == "hex":
+        return _train_hex(training_steps)
+    elif game == "hex_simplified":
         return _train_hex_simplified(training_steps)
     else:
         logger.error(f"Game {game} not implemented.")
