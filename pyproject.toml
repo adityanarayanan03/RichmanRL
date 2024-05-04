@@ -25,7 +25,8 @@ dependencies = [
     "pettingzoo[classic]",
     "tqdm",
     "torch",
-    "omegaconf"
+    "omegaconf",
+    "scipy",
 ]
 
 [project.optional-dependencies]

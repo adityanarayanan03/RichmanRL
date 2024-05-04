@@ -5,10 +5,11 @@ We can only do this for Hex.
 
 from __future__ import annotations
 from RichmanRL.algs import HexPolicy, HexGamePolicy, HexBiddingPolicy
+from RichmanRL.utils import RandomBiddingPolicy, RandomGamePolicy
 from RichmanRL.envs import RichmanEnv, Hex
 import numpy as np
 from tqdm import tqdm
-
+from scipy import stats
 
 import logging
 
@@ -17,7 +18,7 @@ logger = logging.getLogger("scoring.py")
 logger.setLevel(logging.DEBUG)
 
 
-def score_nn_bids(
+def score_nn(
     nn_bid_pi: Policy,
     nn_game_pi: Policy,
     num_evals: int = 100,
@@ -43,8 +44,14 @@ def score_nn_bids(
     hex_game, hex_bidding = HexGamePolicy(hex_base), HexBiddingPolicy(hex_base)
 
     scores = []
+    game_scores = []
     for eval_idx in tqdm(range(num_evals)):
-        traj = r.generate_trajectory(nn_bid_pi, nn_game_pi, hex_bidding, hex_game)
+        traj = r.generate_trajectory(
+            nn_bid_pi,
+            nn_game_pi,
+            RandomBiddingPolicy(None, 201, 0),
+            RandomGamePolicy(None, 121, 0),
+        )
 
         nn_traj = traj["player_1"]
         theoretical_traj = traj["player_2"]
@@ -63,10 +70,25 @@ def score_nn_bids(
             nn_probs, nn_taken = nn_bid_pi(
                 S1, return_probs=True
             )  # What did we do instead?
+            
+            #print(f"[DEBG] before game policy")
+            theoretical_game_action, _ = hex_game(S1, return_prob=True)
+            #print(f"[DEBUG] Theoretical game action vector is {theoretical_game_action}")
+            nn_game_action_probs, _ = nn_game_pi(S1, return_probs = True)
+            
+            #Compare with kendall tau
+            #print(f"[DEBUG] Shape of theoretical is {theoretical_game_action.shape}")
+            #print(f"[DEBUG] Shape of nn is {nn_game_action_probs.shape}")
+            res = stats.kendalltau(theoretical_game_action, nn_game_action_probs)
+            game_scores.append(res.statistic)
+            #print(f"[DEBUG] kendall tau is {res.statistic}")
 
             score = nn_probs[theoretical_bid]
+            #print(f"[DEBUG] Score is {score}")
+            #print(f"[DEBUG] nn_probs is {nn_probs}")
+            #print(f"[DEBUG] Theoretical bid is {theoretical_bid}")
 
-            #We have a giga problem if the theoretical bid is not legal
+            # We have a giga problem if the theoretical bid is not legal
             if not 0 <= theoretical_bid <= S1["action_mask"][0]:
                 raise ValueError("Theoretical bid was not legal!")
 
@@ -75,4 +97,4 @@ def score_nn_bids(
         traj_score /= len(nn_traj)
         scores.append(traj_score)
 
-    return np.mean(scores)
+    return np.mean(scores), np.mean(game_scores)

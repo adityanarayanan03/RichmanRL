@@ -11,7 +11,7 @@ from RichmanRL.utils import (
     RandomBiddingPolicy,  # noqa: F401
     ConservativeBiddingPolicy,
 )
-from RichmanRL.utils.scoring import score_nn_bids
+from RichmanRL.utils.scoring import score_nn
 from pettingzoo.classic import tictactoe_v3
 from tqdm import tqdm
 import pdb
@@ -91,8 +91,11 @@ def test_reinforce_hex():
 
 def test_reinforce_with_scoring():
     """Test bidding scoring against an optimal policy."""
+    bidding_policy, game_policy = train_reinforce_agent("hex", 1)
+
+    bidding_score, game_score = score_nn(bidding_policy, game_policy, 10)
+
+    print(f"bidding score is {bidding_score, game_score}")
+
+def test_scoring_while_training():
     bidding_policy, game_policy = train_reinforce_agent("hex", 1000)
-
-    bidding_score = score_nn_bids(bidding_policy, game_policy, 50)
-
-    print(f"bidding score is {bidding_score}")

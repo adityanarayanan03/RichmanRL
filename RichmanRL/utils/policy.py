@@ -49,12 +49,14 @@ class Policy(ABC):
 class NoBiddingPolicy(Policy):
     """Useful for learning game policies independently."""
 
-    def __call__(self, state: RichmanObservation) -> int:
+    def __call__(self, state: RichmanObservation, return_probs = False) -> int:
         """Always returns the same number (0).
 
         Ties on bidding passed into the RichmanEnv will result in a
         50/50 split on who gets the action.
         """
+        if return_probs:
+            return np.zeros(121), 0
         return 0
 
     def update(self, *args, **kwargs):

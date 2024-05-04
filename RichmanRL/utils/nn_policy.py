@@ -28,7 +28,7 @@ class InGameNNPolicy(Policy):
         self.mlp = MLP(input_dimension, output_dimension)
 
         self.optimizer = optim.Adam(
-            self.mlp.parameters(), lr=0.0003, betas=(0.9, 0.999)
+            self.mlp.parameters(), lr=0.0001, betas=(0.9, 0.999)
         )
 
     @torch.enable_grad()
@@ -52,10 +52,19 @@ class InGameNNPolicy(Policy):
         legal_mask = state["action_mask"][1]
 
         action_taken = action[agent][1]
+        
+        if legal_mask[action_taken] == 0:
+            print(f"[DEBUG] Took illegal action {action_taken} with legal mask {legal_mask}")
 
         probs = self.mlp(state_feature, legal_mask, return_prob=True)
 
         loss = -1 * torch.log(probs[action_taken]) * self.alpha * gamma_t * delta
+        
+        #print(f"[DEBUG] loss is {loss}")
+
+        if np.isnan(loss.detach().numpy()):
+            print(f"[ERROR] Loss is {loss}")
+            sys.exit(0)
 
         loss.backward()
         self.optimizer.step()
@@ -71,7 +80,7 @@ class InGameNNPolicy(Policy):
         _, action = torch.max(action_probs, dim=0)
 
         if return_probs:
-            return action_probs.numpy(), int(action)
+            return action_probs.detach().numpy(), int(action)
 
         return int(action)
 
@@ -133,18 +142,24 @@ class BiddingNNPolicy(Policy):
         action_taken = action[agent][0]
 
         if legal_mask[action_taken] == 0:
-            self.logger.error(f"Agent {agent} took an illegal action {action}")
-            self.logger.debug(f"Legal bid was {legal_bid} and action was {action_taken}")  # noqa: E501
+            print(f"[ERROR] Agent {agent} took an illegal action {action}")
+            print(f"[ERROR] Legal bid was {legal_bid} and action was {action_taken}")  # noqa: E501
             sys.exit(0)
 
         probs = self.mlp(input_feature, legal_mask, return_prob=True)
 
         loss = -1 * torch.log(probs[action_taken]) * self.alpha * gamma_t * delta
+    
+        #print(f"[DEBUG] Loss is {loss}")
+    
+        if np.isnan(loss.detach().numpy()):
+            print(f"[ERROR] Loss is {loss}")
+            sys.exit(0)
 
         loss.backward()
         self.optimizer.step()
 
-    @torch.no_grad
+    #@torch.no_grad
     def __call__(self, state: RichmanObservation, return_probs = False) -> int:
         """Callable that returns action for the agent."""
         bidding_feature = state["observation"][0]  # My own pot size
@@ -159,6 +174,6 @@ class BiddingNNPolicy(Policy):
         _, action = torch.max(action_probs, dim=0)
 
         if return_probs:
-            return action_probs.numpy(), int(action)
+            return action_probs.detach().numpy(), int(action)
 
         return int(action)
