@@ -88,7 +88,7 @@ class MCTS():
 
         self.Ns[s] += 1
 
-    def search(self, board, last_played, i=0):
+    def search(self, board, last_played):
         """
         This function performs one iteration of MCTS. It is recursively called
         till a leaf node is found. The action chosen at each node is one that
@@ -139,8 +139,7 @@ class MCTS():
         
         a1, a2 = self.act(s1, valid), self.act(s2, valid)
         next_s, who_played = self.game.getNextState(board, a1, a2) 
-        print("Depth = ", i)                       
-        v = self.search(next_s, who_played, i+1)
+        v = self.search(next_s, who_played)
         if(who_played == 1):
             self.updateQ(s1, a1, v)
         else:

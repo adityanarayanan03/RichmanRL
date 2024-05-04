@@ -16,7 +16,6 @@ class HexNNet(nn.Module):
         self.args = args
 
         super(HexNNet, self).__init__()
-        print(args.num_channels)
         self.conv1 = nn.Conv2d(2, args.num_channels, 3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(args.num_channels, args.num_channels, 3, stride=1, padding=1)
         self.conv3 = nn.Conv2d(args.num_channels, args.num_channels, 3, stride=1)
