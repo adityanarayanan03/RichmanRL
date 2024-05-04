@@ -10,9 +10,48 @@ from tqdm import tqdm
 
 from Arena import Arena
 from MCTS import MCTS
+from RichmanRL.utils import Policy
+from hex.hex_game import HexMCTSRandomGame
 
 log = logging.getLogger(__name__)
 
+class HexMCTSPolicy(Policy):
+    """Abstract base class for policies, tabular or NN."""
+
+    def __init__(self, nnet, ):
+        """Constructor.
+
+        Args:
+            value_function : ValueFunction - Valid state or state-action value function.
+            num_actions : Number of actions available.
+            epsilon : float - Epsilon value for exploration. Set to 0 for none.
+        """
+        self.nnet = nnet
+        self.game = HexMCTSRandomGame()
+
+    @abstractmethod
+    def __call__(
+        self,
+        state: RichmanObservation,
+    ) -> int:
+        """All policies must be callable, returning an action."""
+        # Generics would be a better way to type hint this.
+        board = state["observation"][2][:,:,0] + 2*state["observation"][2][:,:,1]
+        pi, v = self.nnet.predict(state["observation"][2])
+        pi = pi*self.game.getValidMoves(board)
+        pi /= pi.sum()
+        return np.random.choice(len(pi), p=pi)
+
+    @abstractmethod
+    def update(self, *args, **kwargs):
+        """All policies must have an update method.
+
+        This can be updating the weights of a neural network in polciy
+        gradient, or as simple as making a policy greedy with respect
+        to an updated value function. If a value function is required
+        for the policy, it should be updated here as well.
+        """
+        pass
 
 class Coach():
     """
@@ -163,3 +202,6 @@ class Coach():
 
             # examples based on the model were already collected (loaded)
             self.skipFirstSelfPlay = True
+    
+    def get_policy(self):
+        return HexMCTSPolicy(self.nnet)
