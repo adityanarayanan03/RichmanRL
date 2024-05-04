@@ -52,21 +52,29 @@ class Coach():
 
         while True:
             episodeStep += 1
-            canonicalBoard = self.game.getCanonicalForm(board, self.curPlayer)
+            cb1, cb2 = self.game.getCanonicalForm(board)
             temp = int(episodeStep < self.args.tempThreshold)
 
-            pi = self.mcts.getActionProb(canonicalBoard, temp=temp)
-            sym = self.game.getSymmetries(canonicalBoard, pi)
-            for b, p in sym:
-                trainExamples.append([b, self.curPlayer, p, None])
+            pi_1 = self.mcts.getActionProb(board, 1, temp=1)
+            sym_1 = self.game.getSymmetries(cb1, pi_1)
+            action1 = np.random.choice(len(pi_1), p=pi_1)
+            pi_2 = self.mcts.getActionProb(board, 2, temp=1)
+            sym_2 = self.game.getSymmetries(cb2, pi_2)
+            action2 = np.random.choice(len(pi_2), p=pi_2)
+            board, who_played = self.game.getNextState(board, action1, action2)
+            r = self.game.getGameEnded(board)
 
-            action = np.random.choice(len(pi), p=pi)
-            board, self.curPlayer = self.game.getNextState(board, self.curPlayer, action)
-
-            r = self.game.getGameEnded(board, self.curPlayer)
+            sym = sym_1 if who_played == 1 else sym_2
+            for (b, p) in sym:
+                trainExamples.append((b, who_played, p))
 
             if r != 0:
-                return [(x[0], x[2], r * ((-1) ** (x[1] != self.curPlayer))) for x in trainExamples]
+                ret = []
+                for i in range(len(trainExamples)-1):
+                    b, wp, p = trainExamples[i]
+                    ret.append((b, p, 1 if wp == trainExamples[i+1][1] else -1))
+                ret.append((trainExamples[-1][0], trainExamples[-1][2], 1))
+                return ret
 
     def learn(self):
         """
@@ -114,8 +122,8 @@ class Coach():
             nmcts = MCTS(self.game, self.nnet, self.args)
 
             log.info('PITTING AGAINST PREVIOUS VERSION')
-            arena = Arena(lambda x: np.argmax(pmcts.getActionProb(x, temp=0)),
-                          lambda x: np.argmax(nmcts.getActionProb(x, temp=0)), self.game)
+            arena = Arena(lambda x, y: np.argmax(pmcts.getActionProb(x, y, temp=0)),
+                          lambda x, y: np.argmax(nmcts.getActionProb(x, y, temp=0)), self.game)
             pwins, nwins, draws = arena.playGames(self.args.arenaCompare)
 
             log.info('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (nwins, pwins, draws))

@@ -116,27 +116,7 @@ class Game():
                          Required by MCTS for hashing.
         """
         pass
+    
 
+    
 
-class HexMCTSGame():
-
-    def __init__(self):
-        self.hexWrapper = RichmanEnv(
-        env=Hex(render_mode="human"), capital=100, verbose=True
-        )
-    
-    def getInitBoard(self):
-        return np.zeros((11,11))
-    
-    def getBoardSize(self):
-        return np.zeros((11,11)).size()
-    
-    def getActionSize(self):
-        return 121
-    
-    def getNextState(self, board, player, action):
-        player = 1 if player == 1 else 2
-        richmanAction = RichmanAction(player_1=action, )
-        self.hexWrapper.step
-    
-    def 
