@@ -11,14 +11,16 @@ from typing import Union, Literal, Tuple
 from tqdm import tqdm
 import torch
 import sys
+from RichmanRL.algs import HexBiddingPolicy, HexGamePolicy, HexPolicy
 
 from RichmanRL.utils import (
     RandomBiddingPolicy,
     RandomGamePolicy,
     BiddingNNPolicy,
     InGameNNPolicy,
-    ConstantBaseline
+    ConstantBaseline,
 )
+from RichmanRL.utils import get_pickled_policy
 
 import logging
 
@@ -256,6 +258,7 @@ def _train_hex(training_steps: int) -> Tuple[Policy, Policy]:
     
     return reinforce.get_policies()[2:4]
 
+
 def train_reinforce_agent(
     game: Literal["ttt", "hex"], training_steps: int = 100_000
 ) -> Tuple[Policy, Policy]:
@@ -272,5 +275,3 @@ def train_reinforce_agent(
     else:
         logger.error(f"Game {game} not implemented.")
         raise NotImplementedError(f"Game {game} not implemented.")
-
-

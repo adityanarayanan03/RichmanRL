@@ -8,6 +8,7 @@ from RichmanRL.utils import (
     NoBiddingPolicy,
     InGameNNPolicy,
     BiddingNNPolicy,
+    BiddingHexNNPolicy,
     RandomBiddingPolicy,  # noqa: F401
     ConservativeBiddingPolicy
 )
@@ -15,7 +16,7 @@ from pettingzoo.classic import tictactoe_v3
 from tqdm import tqdm
 import pdb
 from RichmanRL.utils.evaluation import evaluate_policies
-from RichmanRL.utils import pickle_policy
+from RichmanRL.utils import pickle_policy, get_pickled_policy
 
 
 def test_trajectory_generation():
@@ -89,4 +90,13 @@ def test_reinforce_hex():
     pickle_policy(game_policy, "REINFORCE_GAME.pkl", "/home/anant/projects/RichmanRL")
     print(f"win, loss, tie is {stats}")
 
-test_reinforce_ttt()
+base_policy = HexPolicy()
+stats = evaluate_policies(
+        "hex",
+        HexBiddingPolicy(base_policy),
+        HexGamePolicy(base_policy),
+        HexBiddingPolicy(HexPolicy()),
+        get_pickled_policy("MCTS_Policy.pkl", "/home/aditya/projects/UT/RichmanRL"))
+print(f"win, loss, tie is {stats}")
+
+
