@@ -1,8 +1,8 @@
 from typing import Iterable, Tuple
 
 import numpy as np
-from env import EnvSpec
-from policy import Policy
+from .env import EnvSpec
+from .policy import Policy
 import math
 from tqdm import tqdm
 

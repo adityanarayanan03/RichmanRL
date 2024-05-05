@@ -25,12 +25,16 @@ dependencies = [
     "pettingzoo[classic]",
     "tqdm",
     "torch",
-    "omegaconf"
+    "omegaconf",
+    "scipy",
 ]
 
 [project.optional-dependencies]
 dev = ["black", "ruff", "mypy"]
 test = ["pytest", "pytest-cov", "pytest-mock", "pdbpp"]
+
+[project.entry-points.console_scripts]
+richman_rl = "RichmanRL.main:gladiator_ring"
 
 [project.urls]
 "Homepage" = "https://github.com/adityanarayanan03/RichmanRL"

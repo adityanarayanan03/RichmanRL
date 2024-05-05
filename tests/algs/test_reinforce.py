@@ -9,8 +9,9 @@ from RichmanRL.utils import (
     InGameNNPolicy,
     BiddingNNPolicy,
     RandomBiddingPolicy,  # noqa: F401
-    ConservativeBiddingPolicy
+    ConservativeBiddingPolicy,
 )
+from RichmanRL.utils.scoring import score_nn
 from pettingzoo.classic import tictactoe_v3
 from tqdm import tqdm
 import pdb
@@ -73,7 +74,7 @@ def test_reinforce_ttt():
 
 def test_reinforce_hex():
     """Makes sure reinforce runs without errors."""
-    bidding_policy, game_policy = train_reinforce_agent("hex", 10_000)
+    bidding_policy, game_policy = train_reinforce_agent("hex", 1000)
     hex_base = HexPolicy()
     hex_game, hex_bidding = HexGamePolicy(hex_base), HexBiddingPolicy(hex_base)
     stats = evaluate_policies(
@@ -84,8 +85,17 @@ def test_reinforce_hex():
         game_policy,
         num_samples= 100
     )
-    pickle_policy(bidding_policy, "REINFORCE_BIDDING.pkl", "/home/anant/projects/RichmanRL")
-    pickle_policy(game_policy, "REINFORCE_GAME.pkl", "/home/anant/projects/RichmanRL")
+    #pickle_policy(bidding_policy, "REINFORCE_BIDDING.pkl", "/home/anant/projects/RichmanRL")
+    #pickle_policy(game_policy, "REINFORCE_GAME.pkl", "/home/anant/projects/RichmanRL")
     print(f"win, loss, tie is {stats}")
 
-test_reinforce_hex()
+def test_reinforce_with_scoring():
+    """Test bidding scoring against an optimal policy."""
+    bidding_policy, game_policy = train_reinforce_agent("hex", 1)
+
+    bidding_score, game_score = score_nn(bidding_policy, game_policy, 10)
+
+    print(f"bidding score is {bidding_score, game_score}")
+
+def test_scoring_while_training():
+    bidding_policy, game_policy = train_reinforce_agent("hex", 1000)
