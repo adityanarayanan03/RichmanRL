@@ -142,7 +142,7 @@ def compare_methods_hex(
 
 
 def gladiator_ring(
-    game: Literal["ttt"] | Literal["hex"],
+    game: Literal["ttt"] | Literal["hex"] = "ttt",
     methods: list = ["random", "policy_gradient", "policy_gradient_simplified", "Tabular"],
     runs: int = 10,
 ) -> list[list[tuple]]:
@@ -177,5 +177,6 @@ def gladiator_ring(
 
 
 if __name__ == "__main__":
-    results = gladiator_ring("hex", methods=["random", "policy_gradient", "policy_gradient_simplified"], runs=3)
+    #results = gladiator_ring("hex", methods=["random", "policy_gradient", "policy_gradient_simplified"], runs=3)
+    results = gladiator_ring("ttt")
     logger.info(results)
